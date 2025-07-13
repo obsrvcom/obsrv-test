@@ -17,11 +17,11 @@ test('users can authenticate using the login screen', function () {
     $response = LivewireVolt::test('auth.login')
         ->set('email', $user->email)
         ->set('password', 'password')
-        ->call('login');
+        ->call('loginWithPassword');
 
     $response
         ->assertHasNoErrors()
-        ->assertRedirect(route('dashboard', absolute: false));
+        ->assertRedirect(route('company.select', absolute: false));
 
     $this->assertAuthenticated();
 });
@@ -32,9 +32,9 @@ test('users can not authenticate with invalid password', function () {
     $response = LivewireVolt::test('auth.login')
         ->set('email', $user->email)
         ->set('password', 'wrong-password')
-        ->call('login');
+        ->call('loginWithPassword');
 
-    $response->assertHasErrors('email');
+    $response->assertHasErrors('password');
 
     $this->assertGuest();
 });

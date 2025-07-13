@@ -1,18 +1,24 @@
 <?php
 
 use App\Models\User;
+use App\Models\Company;
 use Livewire\Volt\Volt;
+use Tests\SubdomainTestTrait;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(\Illuminate\Foundation\Testing\RefreshDatabase::class, SubdomainTestTrait::class);
 
 test('profile page is displayed', function () {
-    $this->actingAs($user = User::factory()->create());
+    $user = User::factory()->create();
+    $company = $this->setupTestWithCompany($user);
 
-    $this->get('/settings/profile')->assertOk();
+    $this->actingAs($user);
+
+    $this->get('/user-settings/profile')->assertOk();
 });
 
 test('profile information can be updated', function () {
     $user = User::factory()->create();
+    $company = $this->setupTestWithCompany($user);
 
     $this->actingAs($user);
 
@@ -32,6 +38,7 @@ test('profile information can be updated', function () {
 
 test('email verification status is unchanged when email address is unchanged', function () {
     $user = User::factory()->create();
+    $company = $this->setupTestWithCompany($user);
 
     $this->actingAs($user);
 
@@ -47,6 +54,7 @@ test('email verification status is unchanged when email address is unchanged', f
 
 test('user can delete their account', function () {
     $user = User::factory()->create();
+    $company = $this->setupTestWithCompany($user);
 
     $this->actingAs($user);
 
@@ -64,6 +72,7 @@ test('user can delete their account', function () {
 
 test('correct password must be provided to delete account', function () {
     $user = User::factory()->create();
+    $company = $this->setupTestWithCompany($user);
 
     $this->actingAs($user);
 
