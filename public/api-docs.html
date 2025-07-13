@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation - Obsrv Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8fafc;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            background: #1e293b;
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            color: #1e293b;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .section h3 {
+            color: #374151;
+            font-size: 1.4rem;
+            margin: 1.5rem 0 1rem 0;
+        }
+
+        .endpoint {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .method {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+        }
+
+        .method.post {
+            background: #10b981;
+            color: white;
+        }
+
+        .method.get {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .url {
+            font-family: 'Monaco', 'Menlo', monospace;
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .description {
+            margin: 1rem 0;
+            color: #6b7280;
+        }
+
+        .params {
+            margin: 1rem 0;
+        }
+
+        .param {
+            display: flex;
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            background: white;
+            border-radius: 4px;
+        }
+
+        .param-name {
+            font-weight: 600;
+            min-width: 120px;
+            color: #374151;
+        }
+
+        .param-type {
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-left: 0.5rem;
+        }
+
+        .param-required {
+            background: #ef4444;
+            color: white;
+            padding: 0.125rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+
+        .param-optional {
+            background: #6b7280;
+            color: white;
+            padding: 0.125rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+
+        .example {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+
+        .example pre {
+            margin: 0;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+        }
+
+        .response {
+            margin: 1rem 0;
+        }
+
+        .response h4 {
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status.success {
+            background: #10b981;
+            color: white;
+        }
+
+        .status.error {
+            background: #ef4444;
+            color: white;
+        }
+
+        .status.client-error {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .note {
+            background: #dbeafe;
+            border: 1px solid #93c5fd;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .note strong {
+            color: #1e40af;
+        }
+
+        .warning {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .warning strong {
+            color: #92400e;
+        }
+
+        .toc {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .toc h2 {
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        .toc ul {
+            list-style: none;
+        }
+
+        .toc li {
+            margin: 0.5rem 0;
+        }
+
+        .toc a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>API Documentation</h1>
+            <p>Obsrv Test - Device Management & Authentication API</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="toc">
+            <h2>Table of Contents</h2>
+            <ul>
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#authentication">Authentication</a></li>
+                <li><a href="#headers">Required Headers</a></li>
+                <li><a href="#endpoints">API Endpoints</a></li>
+                <li><a href="#errors">Error Handling</a></li>
+                <li><a href="#examples">Complete Examples</a></li>
+            </ul>
+        </div>
+
+        <div class="section" id="overview">
+            <h2>Overview</h2>
+            <p>This API provides device management and authentication functionality for the Obsrv Test application. It supports device registration, user authentication, and secure API access with device-based authentication.</p>
+
+            <div class="note">
+                <strong>Base URL:</strong> <code>https://your-domain.com/api/v1</code>
+            </div>
+        </div>
+
+        <div class="section" id="authentication">
+            <h2>Authentication</h2>
+            <p>The API uses Laravel Sanctum for token-based authentication. After successful login, you'll receive a Bearer token that must be included in subsequent requests.</p>
+
+            <h3>Token Format</h3>
+            <div class="example">
+                <pre>Authorization: Bearer {your-token-here}</pre>
+            </div>
+
+            <div class="warning">
+                <strong>Important:</strong> Tokens are valid for 1 year from creation. Store them securely and never expose them in client-side code.
+            </div>
+        </div>
+
+        <div class="section" id="headers">
+            <h2>Required Headers</h2>
+            <p>All API requests require specific headers for device identification and authentication.</p>
+
+            <h3>Device Header</h3>
+            <div class="example">
+                <pre>X-Device-ID: {device-id}</pre>
+            </div>
+            <p>This header identifies the device making the request. It's required for all authenticated endpoints.</p>
+
+            <h3>Authentication Header</h3>
+            <div class="example">
+                <pre>Authorization: Bearer {token}</pre>
+            </div>
+            <p>Required for all protected endpoints after login.</p>
+
+            <div class="note">
+                <strong>Note:</strong> The device ID must belong to the authenticated user, or the request will be rejected with a 403 error.
+            </div>
+        </div>
+
+        <div class="section" id="endpoints">
+            <h2>API Endpoints</h2>
+
+            <div class="endpoint">
+                <h3>
+                    <span class="method post">POST</span>
+                    <span class="url">/api/v1/devices/register</span>
+                </h3>
+                <div class="description">
+                    Register a new device. This creates an unlinked device that can later be associated with a user during login.
+                </div>
+
+                <div class="params">
+                    <h4>Request Parameters</h4>
+                    <div class="param">
+                        <span class="param-name">name</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">Required</span>
+                    </div>
+                    <div class="param">
+                        <span class="param-name">type</span>
+                        <span class="param-type">string</span>
+                        <span class="param-optional">Optional</span>
+                    </div>
+                </div>
+
+                <div class="example">
+                    <pre>{
+  "name": "iPhone 15 Pro",
+  "type": "mobile"
+}</pre>
+                </div>
+
+                <div class="response">
+                    <h4>Response</h4>
+                    <div class="status success">201 Created</div>
+                    <div class="example">
+                        <pre>{
+  "device_id": 123
+}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h3>
+                    <span class="method post">POST</span>
+                    <span class="url">/api/v1/auth/login</span>
+                </h3>
+                <div class="description">
+                    Authenticate a user and associate a device with their account. Returns an API token for subsequent requests.
+                </div>
+
+                <div class="params">
+                    <h4>Request Parameters</h4>
+                    <div class="param">
+                        <span class="param-name">device_id</span>
+                        <span class="param-type">integer</span>
+                        <span class="param-required">Required</span>
+                    </div>
+                    <div class="param">
+                        <span class="param-name">email</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">Required</span>
+                    </div>
+                    <div class="param">
+                        <span class="param-name">password</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">Required</span>
+                    </div>
+                </div>
+
+                <div class="example">
+                    <pre>{
+  "device_id": 123,
+  "email": "user@example.com",
+  "password": "password123"
+}</pre>
+                </div>
+
+                <div class="response">
+                    <h4>Response</h4>
+                    <div class="status success">200 OK</div>
+                    <div class="example">
+                        <pre>{
+  "token": "1|abc123def456...",
+  "user": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "user@example.com",
+    "email_verified_at": "2024-01-01T00:00:00.000000Z",
+    "created_at": "2024-01-01T00:00:00.000000Z",
+    "updated_at": "2024-01-01T00:00:00.000000Z"
+  },
+  "device_id": 123
+}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h3>
+                    <span class="method get">GET</span>
+                    <span class="url">/api/user/devices</span>
+                </h3>
+                <div class="description">
+                    Get all devices associated with the authenticated user. Requires authentication and device headers.
+                </div>
+
+                <div class="params">
+                    <h4>Headers Required</h4>
+                    <div class="param">
+                        <span class="param-name">X-Device-ID</span>
+                        <span class="param-type">integer</span>
+                        <span class="param-required">Required</span>
+                    </div>
+                    <div class="param">
+                        <span class="param-name">Authorization</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">Required</span>
+                    </div>
+                </div>
+
+                <div class="response">
+                    <h4>Response</h4>
+                    <div class="status success">200 OK</div>
+                    <div class="example">
+                        <pre>[
+  {
+    "id": 123,
+    "user_id": 1,
+    "name": "iPhone 15 Pro",
+    "type": "mobile",
+    "session_id": null,
+    "user_agent": null,
+    "ip_address": null,
+    "fingerprint": null,
+    "revoked": false,
+    "last_seen": "2024-01-01T12:00:00.000000Z",
+    "created_at": "2024-01-01T10:00:00.000000Z",
+    "updated_at": "2024-01-01T12:00:00.000000Z"
+  }
+]</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="errors">
+            <h2>Error Handling</h2>
+            <p>The API returns standard HTTP status codes and JSON error messages.</p>
+
+            <div class="endpoint">
+                <h3>Common Error Responses</h3>
+
+                <div class="response">
+                    <h4>400 Bad Request</h4>
+                    <div class="status client-error">400</div>
+                    <div class="example">
+                        <pre>{
+  "message": "The given data was invalid.",
+  "errors": {
+    "email": ["The email field is required."]
+  }
+}</pre>
+                    </div>
+                </div>
+
+                <div class="response">
+                    <h4>401 Unauthorized</h4>
+                    <div class="status error">401</div>
+                    <div class="example">
+                        <pre>{
+  "message": "Invalid credentials"
+}</pre>
+                    </div>
+                </div>
+
+                <div class="response">
+                    <h4>403 Forbidden</h4>
+                    <div class="status error">403</div>
+                    <div class="example">
+                        <pre>{
+  "message": "Device revoked. Please reset."
+}</pre>
+                    </div>
+                </div>
+
+                <div class="response">
+                    <h4>404 Not Found</h4>
+                    <div class="status error">404</div>
+                    <div class="example">
+                        <pre>{
+  "message": "Device not found"
+}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="examples">
+            <h2>Complete Examples</h2>
+
+            <h3>Device Registration & Authentication Flow</h3>
+            <div class="example">
+                <pre># Step 1: Register a device
+curl -X POST https://your-domain.com/api/v1/devices/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "iPhone 15 Pro",
+    "type": "mobile"
+  }'
+
+# Response: {"device_id": 123}
+
+# Step 2: Login with device
+curl -X POST https://your-domain.com/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "device_id": 123,
+    "email": "user@example.com",
+    "password": "password123"
+  }'
+
+# Response: {"token": "1|abc123...", "user": {...}, "device_id": 123}
+
+# Step 3: Make authenticated request
+curl -X GET https://your-domain.com/api/user/devices \
+  -H "X-Device-ID: 123" \
+  -H "Authorization: Bearer 1|abc123..."</pre>
+            </div>
+
+            <h3>JavaScript Example</h3>
+            <div class="example">
+                <pre>// Register device
+const registerDevice = async () => {
+  const response = await fetch('/api/v1/devices/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      name: 'iPhone 15 Pro',
+      type: 'mobile'
+    })
+  });
+
+  const data = await response.json();
+  return data.device_id;
+};
+
+// Login
+const login = async (deviceId, email, password) => {
+  const response = await fetch('/api/v1/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      device_id: deviceId,
+      email: email,
+      password: password
+    })
+  });
+
+  const data = await response.json();
+  return data.token;
+};
+
+// Get user devices
+const getUserDevices = async (deviceId, token) => {
+  const response = await fetch('/api/user/devices', {
+    headers: {
+      'X-Device-ID': deviceId,
+      'Authorization': `Bearer ${token}`
+    }
+  });
+
+  return await response.json();
+};</pre>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Device Management</h2>
+            <p>Devices can be managed through the web interface at <code>/settings/devices</code>. Users can:</p>
+            <ul>
+                <li>View all their devices and web sessions</li>
+                <li>Revoke individual devices or sessions</li>
+                <li>Revoke all devices or all sessions</li>
+                <li>See last seen timestamps and IP addresses</li>
+            </ul>
+
+            <div class="warning">
+                <strong>Security Note:</strong> When a device is revoked, it can no longer make API requests. The user must register a new device and log in again.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

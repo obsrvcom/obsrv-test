@@ -7,11 +7,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -57,5 +58,49 @@ class User extends Authenticatable
             ->take(2)
             ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
+    }
+
+    /**
+     * Get the devices for the user.
+     */
+    public function devices()
+    {
+        return $this->hasMany(Device::class);
+    }
+
+    /**
+     * Get the companies for the user.
+     */
+    public function companies()
+    {
+        return $this->belongsToMany(Company::class)->withPivot('role')->withTimestamps();
+    }
+
+        /**
+     * Get the current company for the user (from session).
+     */
+    public function currentCompany()
+    {
+        $companyId = session('current_company_id');
+        if (!$companyId) {
+            return null;
+        }
+
+        return $this->companies()->where('company_id', $companyId)->first();
+    }
+
+    /**
+     * Get the current company from request (for subdomain-based access).
+     */
+    public function currentCompanyFromRequest()
+    {
+        $request = request();
+        $company = $request->attributes->get('current_company');
+
+        if ($company && $this->companies()->where('company_id', $company->id)->exists()) {
+            return $company;
+        }
+
+        return null;
     }
 }
