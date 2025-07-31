@@ -6,15 +6,37 @@ use App\Models\Ticket;
 use App\Models\Site;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
+use App\Events\TicketUpdated;
 
 class TicketView extends Component
 {
     public Ticket $ticket;
     public $newMessage = '';
-    public $isLoading = false;
     public $site;
 
-    protected $listeners = ['messageAdded' => '$refresh'];
+    protected $listeners = [
+        'messageAdded' => 'refreshTimeline',
+        'ticketUpdated' => 'refreshTicket',
+    ];
+
+            public function getListeners()
+    {
+        $listeners = $this->listeners;
+
+        if ($this->ticket) {
+            $listeners["echo-private:ticket.{$this->ticket->id},.ticket.updated"] = '$refresh';
+            \Log::info('Site view listening to channel', ['channel' => "ticket.{$this->ticket->id}"]);
+        }
+
+        return $listeners;
+    }
+
+    public function handleTicketUpdate()
+    {
+        \Log::info('Site view received ticket update', ['ticket_id' => $this->ticket->id]);
+        $this->ticket->refresh();
+        $this->ticket->load(['messages.user', 'activities.user']);
+    }
 
     public function mount($ticketId)
     {
@@ -43,13 +65,47 @@ class TicketView extends Component
             ->get();
     }
 
+    public function getTimelineProperty()
+    {
+        // Get messages (excluding internal ones)
+        $messages = $this->ticket->messages()
+            ->with('user')
+            ->where('message_type', '!=', 'internal')
+            ->get()
+            ->map(function ($message) {
+                return (object) [
+                    'type' => 'message',
+                    'data' => $message,
+                    'created_at' => $message->created_at,
+                    'sort_order' => 2, // Messages come after activities at same timestamp
+                ];
+            });
+
+        // Get activities
+        $activities = $this->ticket->activities()
+            ->with('user')
+            ->get()
+            ->map(function ($activity) {
+                return (object) [
+                    'type' => 'activity',
+                    'data' => $activity,
+                    'created_at' => $activity->created_at,
+                    'sort_order' => 1, // Activities come before messages at same timestamp
+                ];
+            });
+
+        // Combine and sort by timestamp first, then by sort_order
+        return $messages->merge($activities)->sortBy([
+            ['created_at', 'asc'],
+            ['sort_order', 'asc']
+        ]);
+    }
+
     public function sendMessage()
     {
         $this->validate([
             'newMessage' => 'required|string|min:1|max:2000'
         ]);
-
-        $this->isLoading = true;
 
         try {
             $this->ticket->messages()->create([
@@ -60,15 +116,34 @@ class TicketView extends Component
 
             $this->newMessage = '';
 
-            // Dispatch event to refresh messages
+            // Refresh the ticket model to get updated relationships
+            $this->ticket->refresh();
+            $this->ticket->load(['messages.user', 'activities.user']);
+
+            // Dispatch event to refresh timeline
             $this->dispatch('messageAdded');
+
+            // Also broadcast for real-time updates
+            broadcast(new TicketUpdated($this->ticket));
 
         } catch (\Exception $e) {
             session()->flash('error', 'Failed to send message. Please try again.');
-        } finally {
-            $this->isLoading = false;
         }
     }
+
+    public function refreshTimeline()
+    {
+        // Refresh the ticket model and its relationships
+        $this->ticket->refresh();
+        $this->ticket->load(['messages.user', 'activities.user']);
+    }
+
+    public function refreshTicket()
+    {
+        $this->refreshTimeline();
+    }
+
+
 
     public function goBack()
     {

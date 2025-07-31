@@ -19,6 +19,10 @@ class Tickets extends Component
     public $assignedFilter = 'all';
     public $search = '';
 
+        protected $listeners = [
+        'ticketUpdated' => '$refresh',
+    ];
+
     protected $queryString = [
         'statusFilter' => ['except' => 'all'],
         'teamFilter' => ['except' => 'all'],

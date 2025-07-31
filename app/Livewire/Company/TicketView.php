@@ -21,7 +21,29 @@ class TicketView extends Component
     public $assignToTeam = null;
     public $assignToUser = null;
 
-    protected $listeners = ['messageAdded' => '$refresh'];
+    protected $listeners = [
+        'messageAdded' => '$refresh',
+        'ticketUpdated' => '$refresh',
+    ];
+
+            public function getListeners()
+    {
+        $listeners = $this->listeners;
+
+        if ($this->ticket) {
+            $listeners["echo-private:ticket.{$this->ticket->id},ticket.updated"] = 'handleTicketUpdate';
+            \Log::info('Company view listening to channel', ['channel' => "ticket.{$this->ticket->id}"]);
+        }
+
+        return $listeners;
+    }
+
+    public function handleTicketUpdate()
+    {
+        \Log::info('Company view received ticket update', ['ticket_id' => $this->ticket->id]);
+        $this->ticket->refresh();
+        $this->ticket->load(['messages.user', 'activities.user']);
+    }
 
     public function mount($company = null, $ticket = null)
     {
@@ -98,6 +120,9 @@ class TicketView extends Component
             $this->customerMessage = '';
             $this->dispatch('messageAdded');
             $this->dispatch('scrollCustomerToBottom');
+
+            // Also broadcast for real-time updates
+            broadcast(new \App\Events\TicketUpdated($this->ticket));
 
         } catch (\Exception $e) {
             session()->flash('error', 'Failed to send message. Please try again.');
@@ -207,6 +232,8 @@ class TicketView extends Component
             default => ucfirst($status)
         };
     }
+
+
 
     #[Layout('components.layouts.company')]
     public function render()

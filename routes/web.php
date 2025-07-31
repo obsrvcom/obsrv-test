@@ -1,7 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Broadcast;
 use Livewire\Volt\Volt;
+
+// Broadcast auth routes
+Broadcast::routes();
 use App\Livewire\Site\Appointments;
 use App\Livewire\Site\Quotations;
 use App\Livewire\Site\Maintenance;
@@ -22,6 +26,8 @@ use App\Livewire\Company\Contacts as CompanyContacts;
 use App\Livewire\Company\ContactGroups as CompanyContactGroups;
 use App\Livewire\Company\Issues as CompanyIssues;
 use App\Models\Site;
+
+
 
 // Main site routes (accessible on root domain)
 Route::get('/', function () {

@@ -16,6 +16,10 @@ class Tickets extends Component
     public $showNewTicketModal = false;
     public $site;
 
+        protected $listeners = [
+        'ticketUpdated' => '$refresh',
+    ];
+
     public function mount()
     {
         $this->site = request()->route('site');
@@ -48,9 +52,15 @@ class Tickets extends Component
     public function openNewTicketModal()
     {
         $this->showNewTicketModal = true;
-        $this->selectedTeamId = null;
         $this->subject = '';
         $this->description = '';
+
+        // Auto-select the team if there's only one available
+        if ($this->availableTeams->count() === 1) {
+            $this->selectedTeamId = $this->availableTeams->first()->id;
+        } else {
+            $this->selectedTeamId = null;
+        }
     }
 
     public function closeNewTicketModal()
@@ -69,7 +79,15 @@ class Tickets extends Component
 
         // Only validate team if there are available teams
         if ($this->availableTeams->count() > 0) {
-            $validationRules['selectedTeamId'] = 'required|exists:teams,id';
+            $validationRules['selectedTeamId'] = [
+                'required',
+                'integer',
+                function ($attribute, $value, $fail) {
+                    if (!$this->availableTeams->pluck('id')->contains($value)) {
+                        $fail('The selected team is not available for direct ticket creation.');
+                    }
+                }
+            ];
         }
 
         $this->validate($validationRules);

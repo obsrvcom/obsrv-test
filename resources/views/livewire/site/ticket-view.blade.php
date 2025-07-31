@@ -2,10 +2,12 @@
     <!-- Simple header with back button and status -->
     <div class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex-shrink-0">
         <div class="flex items-center justify-between">
-            <flux:button wire:click="goBack" variant="ghost" size="sm">
-                <flux:icon.arrow-left class="w-4 h-4" />
-                Back to Support
-            </flux:button>
+                            <flux:button wire:click="goBack" variant="ghost" size="sm">
+                    <flux:icon.arrow-left class="w-4 h-4" />
+                    Back to Support
+                </flux:button>
+
+
 
             <div class="flex items-center gap-3">
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $this->getStatusColorClass($ticket->status) }}">
@@ -24,42 +26,58 @@
         </div>
     @endif
 
-    <!-- Messages Container - CSS Auto-scroll from bottom -->
+
+
+    <!-- Timeline Container - CSS Auto-scroll from bottom -->
     <div class="flex-1 flex flex-col-reverse overflow-y-auto px-4 sm:px-6 py-4">
-        <!-- Messages in reverse order (newest at bottom) -->
+        <!-- Timeline items in reverse order (newest at bottom) -->
         <div class="flex flex-col space-y-4 max-w-4xl mx-auto w-full">
-            @forelse($this->messages as $message)
-                <div class="flex {{ $message->isCustomerMessage() ? 'justify-end' : 'justify-start' }}">
-                    <div class="max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-2xl">
-                        @if($message->isCustomerMessage())
-                            <!-- Customer Message -->
-                            <div class="bg-blue-600 text-white rounded-lg px-4 py-3">
-                                <p class="break-words">{{ $message->content }}</p>
-                                <p class="text-xs mt-2 opacity-75">
-                                    {{ $message->created_at->format('M j, Y g:i A') }}
-                                </p>
-                            </div>
-                        @else
-                            <!-- Company Message -->
-                            <div class="bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-sm">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <span class="text-sm font-medium text-gray-900">
-                                        {{ $message->user->name }}
-                                    </span>
-                                    @if($ticket->assignedTeam)
-                                        <span class="text-xs text-gray-500">
-                                            {{ $ticket->assignedTeam->name }}
-                                        </span>
-                                    @endif
+            @forelse($this->timeline as $item)
+                @if($item->type === 'message')
+                    @php $message = $item->data; @endphp
+                    <div class="flex {{ $message->isCustomerMessage() ? 'justify-end' : 'justify-start' }}">
+                        <div class="max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-2xl">
+                            @if($message->isCustomerMessage())
+                                <!-- Customer Message -->
+                                <div class="bg-blue-600 text-white rounded-lg px-4 py-3">
+                                    <p class="break-words">{{ $message->content }}</p>
+                                    <p class="text-xs mt-2 opacity-75">
+                                        {{ $message->created_at->format('M j, Y g:i A') }}
+                                    </p>
                                 </div>
-                                <p class="text-gray-900 break-words">{{ $message->content }}</p>
-                                <p class="text-xs text-gray-500 mt-2">
-                                    {{ $message->created_at->format('M j, Y g:i A') }}
-                                </p>
-                            </div>
-                        @endif
+                            @else
+                                <!-- Company Message -->
+                                <div class="bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-sm">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="text-sm font-medium text-gray-900">
+                                            {{ $message->user->name }}
+                                        </span>
+                                        @if($ticket->assignedTeam)
+                                            <span class="text-xs text-gray-500">
+                                                {{ $ticket->assignedTeam->name }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <p class="text-gray-900 break-words">{{ $message->content }}</p>
+                                    <p class="text-xs text-gray-500 mt-2">
+                                        {{ $message->created_at->format('M j, Y g:i A') }}
+                                    </p>
+                                </div>
+                            @endif
+                        </div>
                     </div>
-                </div>
+                @elseif($item->type === 'activity')
+                    @php $activity = $item->data; @endphp
+                    <!-- Activity Log - Discrete one-line message -->
+                    <div class="flex justify-center">
+                        <div class="text-center">
+                            <div class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 border text-xs text-gray-600">
+                                <flux:icon.clock class="w-3 h-3 mr-1.5 text-gray-400" />
+                                {{ $activity->description }} by {{ $activity->user->name ?? 'System' }} - {{ $activity->created_at->diffForHumans() }} @ {{ $activity->created_at->format('g:i A') }}
+                            </div>
+                        </div>
+                    </div>
+                @endif
             @empty
                 <!-- Empty state at the "top" which will appear at bottom due to flex-col-reverse -->
                 <div class="text-center py-8">
@@ -75,7 +93,7 @@
         @if($ticket->status !== 'closed')
             <div class="px-4 sm:px-6 py-4">
                 <div class="max-w-4xl mx-auto">
-                    <form wire:submit="sendMessage">
+                    <form wire:submit.prevent="sendMessage">
                         <div class="flex gap-3">
                             <div class="flex-1">
                                 <flux:textarea
@@ -83,7 +101,7 @@
                                     placeholder="Type your message..."
                                     rows="3"
                                     class="resize-none w-full"
-                                    :disabled="$isLoading"
+                                    wire:loading.attr="disabled"
                                     @keydown.ctrl.enter="$wire.sendMessage()"
                                 />
                             </div>
@@ -91,14 +109,10 @@
                                 <flux:button
                                     type="submit"
                                     variant="primary"
-                                    :disabled="$isLoading || !$newMessage"
+                                    loading="sendMessage"
                                     class="mb-1"
                                 >
-                                    @if($isLoading)
-                                        <flux:icon.arrow-path class="w-4 h-4 animate-spin" />
-                                    @else
-                                        <flux:icon.paper-airplane class="w-4 h-4" />
-                                    @endif
+                                    <flux:icon.paper-airplane class="w-4 h-4" />
                                     Send
                                 </flux:button>
                                 <p class="text-xs text-gray-500 text-center">Ctrl+Enter</p>
@@ -116,3 +130,5 @@
         @endif
     </div>
 </div>
+
+

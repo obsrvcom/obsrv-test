@@ -1,4 +1,4 @@
-<div class="flex flex-col h-screen">
+<div class="grow flex flex-col">
     <!-- Header -->
     <div class="bg-white border-b border-gray-200 px-6 py-4">
         <div class="flex items-center justify-between">
@@ -7,6 +7,8 @@
                     <flux:icon.arrow-left class="w-4 h-4" />
                     Back to Tickets
                 </flux:button>
+
+
 
                 <div class="border-l border-gray-300 h-6"></div>
 
@@ -66,6 +68,8 @@
         </div>
     @endif
 
+
+
     <!-- Assignment Info -->
     @if($ticket->assignedTeam || $ticket->assignedUser)
         <div class="bg-blue-50 border-b border-blue-200 px-6 py-3">
@@ -87,9 +91,9 @@
     @endif
 
     <!-- Main Content Area with Dual Columns -->
-    <div class="flex-1 flex">
+    <div class="flex-1 flex h-0">
         <!-- Customer Chat Column -->
-        <div class="flex-1 flex flex-col border-r border-gray-200">
+        <div class="flex-1 flex flex-col border-r border-gray-200 h-full">
             <div class="bg-gray-50 border-b border-gray-200 px-4 py-3">
                 <h2 class="text-sm font-medium text-gray-900">Customer Conversation</h2>
                 <p class="text-xs text-gray-500">Visible to customer</p>
@@ -148,7 +152,7 @@
                     <form wire:submit="sendCustomerMessage" class="flex gap-3">
                         <div class="flex-1">
                             <flux:textarea
-                                wire:model="customerMessage"
+                                wire:model.live="customerMessage"
                                 placeholder="Reply to customer..."
                                 rows="3"
                                 class="resize-none"
@@ -175,7 +179,7 @@
         </div>
 
         <!-- Internal Chat Column -->
-        <div class="w-1/3 flex flex-col">
+        <div class="w-1/3 flex flex-col h-full">
             <div class="bg-amber-50 border-b border-amber-200 px-4 py-3">
                 <h2 class="text-sm font-medium text-gray-900">Internal Notes</h2>
                 <p class="text-xs text-gray-500">Only visible to your team</p>
@@ -239,7 +243,7 @@
         </div>
 
         <!-- Activity Sidebar -->
-        <div class="w-80 bg-gray-50 border-l border-gray-200 flex flex-col">
+        <div class="w-80 bg-gray-50 border-l border-gray-200 flex flex-col h-full">
             <div class="bg-gray-100 border-b border-gray-200 px-4 py-3">
                 <h2 class="text-sm font-medium text-gray-900">Activity Log</h2>
             </div>
@@ -319,3 +323,5 @@
         });
     });
 </script>
+
+

@@ -1,19 +1,19 @@
-<div class="grow p-3 flex flex-col">
-    <flux:header>
-        <flux:heading size="xl">Support Tickets</flux:heading>
+<div class="grow p-6 flex flex-col gap-y-4">
 
-        <x-slot:actions>
-            <flux:button wire:click="openNewTicketModal" variant="primary">
-                Get Support
-            </flux:button>
-        </x-slot:actions>
-    </flux:header>
 
     @if(session('message'))
         <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-md mb-6">
             {{ session('message') }}
         </div>
     @endif
+
+    <flux:callout icon="shield-check" color="orange" class="mx-0" inline>
+        <flux:callout.heading>Do you need assistance?</flux:callout.heading>
+        <flux:callout.text>Access your existing support tickets below or start a a new one</flux:callout.text>
+        <x-slot name="actions" class="@md:h-full m-0!">
+            <flux:button wire:click="openNewTicketModal" variant="primary">Start a new ticket</flux:button>
+        </x-slot>
+    </flux:callout>
 
     @if($this->tickets->count() > 0)
         <!-- Tickets Table -->
@@ -126,4 +126,3 @@
         </div>
     </flux:modal>
 </div>
-

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\TicketUpdated;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -115,15 +116,22 @@ class Ticket extends Model
         $this->update(['status' => $status]);
 
         $this->logActivity('status_changed', "Status changed from {$oldStatus} to {$status}", $oldStatus, $status, $userId);
+
+        // Broadcast the ticket update
+        broadcast(new TicketUpdated($this));
     }
 
     public function assignToTeam(?int $teamId, ?int $userId = null): void
     {
         $oldTeam = $this->assignedTeam?->name ?? 'Unassigned';
+        $oldTeamId = $this->assigned_team_id;
         $this->update(['assigned_team_id' => $teamId]);
 
         $newTeam = $teamId ? Team::find($teamId)->name : 'Unassigned';
         $this->logActivity('team_assigned', "Assigned to team: {$newTeam}", $oldTeam, $newTeam, $userId);
+
+        // Broadcast the ticket update
+        broadcast(new TicketUpdated($this));
     }
 
     public function assignToUser(?int $assignedUserId, ?int $userId = null): void
@@ -133,6 +141,9 @@ class Ticket extends Model
 
         $newUser = $assignedUserId ? User::find($assignedUserId)->name : 'Unassigned';
         $this->logActivity('user_assigned', "Assigned to user: {$newUser}", $oldUser, $newUser, $userId);
+
+        // Broadcast the ticket update
+        broadcast(new TicketUpdated($this));
     }
 
     public function getTimeSinceLastResponseAttribute(): ?string

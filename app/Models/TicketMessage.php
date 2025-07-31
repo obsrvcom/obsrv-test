@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\TicketUpdated;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -50,6 +51,10 @@ class TicketMessage extends Model
             if ($message->message_type === 'customer' && $ticket->status === 'awaiting_customer') {
                 $ticket->updateStatus('open', $message->user_id);
             }
+
+            // Broadcast the ticket update event
+            \Log::info('Broadcasting ticket update', ['ticket_id' => $message->ticket->id]);
+            broadcast(new TicketUpdated($message->ticket));
         });
     }
 
