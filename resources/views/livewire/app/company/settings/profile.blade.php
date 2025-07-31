@@ -8,7 +8,8 @@ layout('components.layouts.company');
 state([
     'name' => '',
     'description' => '',
-    'isLoading' => false
+    'isLoading' => false,
+    'currentCompany' => null
 ]);
 
 rules([
@@ -17,12 +18,21 @@ rules([
 ]);
 
 mount(function() {
-    // Get company from route model binding
-    $company = request()->route('company');
+    $request = request();
+    $user = auth()->user();
 
-    if ($company) {
-        $this->name = $company->name;
-        $this->description = $company->description ?? '';
+    // Get company from route model binding first (for company context pages)
+    $routeCompany = $request->route('company');
+    if ($routeCompany && is_object($routeCompany)) {
+        $this->currentCompany = $routeCompany;
+    } else {
+        // Fallback to user's current company
+        $this->currentCompany = $user ? ($user->currentCompanyFromRequest() ?? $user->currentCompany()) : null;
+    }
+
+    if ($this->currentCompany) {
+        $this->name = $this->currentCompany->name;
+        $this->description = $this->currentCompany->description ?? '';
     }
 });
 
@@ -33,17 +43,14 @@ $save = function() {
     $this->isLoading = true;
 
     try {
-        // Get company from route model binding
-        $company = request()->route('company');
-
-        if (!$company) {
+        if (!$this->currentCompany) {
             Flux::toast(text: 'Company not found.', variant: 'danger', duration: 3500);
             return;
         }
 
         // Admin access is already enforced by middleware
 
-        $company->update([
+        $this->currentCompany->update([
             'name' => $this->name,
             'description' => $this->description,
         ]);
@@ -52,7 +59,7 @@ $save = function() {
 
     } catch (\Exception $e) {
         \Log::error('Company update failed', [
-            'company_id' => $company->id ?? 'unknown',
+            'company_id' => $this->currentCompany->id ?? 'unknown',
             'error' => $e->getMessage(),
             'user_id' => auth()->id()
         ]);
@@ -72,7 +79,7 @@ $save = function() {
 
         <flux:navbar>
             <flux:navbar.item
-                :href="route('company.settings.profile', ['company' => request()->route('company')])"
+                :href="$currentCompany ? route('company.settings.profile', ['company' => $currentCompany->id]) : '#'"
                 :current="true"
                 icon="user"
                 wire:navigate
@@ -80,7 +87,7 @@ $save = function() {
                 Profile
             </flux:navbar.item>
             <flux:navbar.item
-                :href="route('company.settings.chats', ['company' => request()->route('company')])"
+                :href="$currentCompany ? route('company.settings.chats', ['company' => $currentCompany->id]) : '#'"
                 icon="chat-bubble-left-right"
                 wire:navigate
             >

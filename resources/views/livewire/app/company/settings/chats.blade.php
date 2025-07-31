@@ -4,6 +4,24 @@ use function Livewire\Volt\{state, mount, layout};
 
 layout('components.layouts.company');
 
+state([
+    'currentCompany' => null
+]);
+
+mount(function() {
+    $request = request();
+    $user = auth()->user();
+
+    // Get company from route model binding first (for company context pages)
+    $routeCompany = $request->route('company');
+    if ($routeCompany && is_object($routeCompany)) {
+        $this->currentCompany = $routeCompany;
+    } else {
+        // Fallback to user's current company
+        $this->currentCompany = $user ? ($user->currentCompanyFromRequest() ?? $user->currentCompany()) : null;
+    }
+});
+
 ?>
 
 <div class="flex h-full w-full flex-1 flex-col">
@@ -13,14 +31,14 @@ layout('components.layouts.company');
 
         <flux:navbar>
             <flux:navbar.item
-                :href="route('company.settings.profile', ['company' => request()->route('company')])"
+                :href="$currentCompany ? route('company.settings.profile', ['company' => $currentCompany->id]) : '#'"
                 icon="user"
                 wire:navigate
             >
                 Profile
             </flux:navbar.item>
             <flux:navbar.item
-                :href="route('company.settings.chats', ['company' => request()->route('company')])"
+                :href="$currentCompany ? route('company.settings.chats', ['company' => $currentCompany->id]) : '#'"
                 :current="true"
                 icon="chat-bubble-left-right"
                 wire:navigate
