@@ -3,8 +3,14 @@
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
-    Route::post('devices/register', [\App\Http\Controllers\Api\V1\DeviceController::class, 'register']);
+    Route::post('device/register', [\App\Http\Controllers\Api\V1\DeviceController::class, 'register']);
+    Route::middleware(\App\Http\Middleware\DeviceApiKeyAuth::class)->post('device/heartbeat', [\App\Http\Controllers\Api\V1\DeviceController::class, 'heartbeat']);
+    Route::middleware(\App\Http\Middleware\DeviceApiKeyAuth::class)->get('device/fcm-token', [\App\Http\Controllers\Api\V1\DeviceController::class, 'getFcmToken']);
+    Route::middleware(\App\Http\Middleware\DeviceApiKeyAuth::class)->post('device/refresh-fcm-token', [\App\Http\Controllers\Api\V1\DeviceController::class, 'refreshFcmToken']);
     Route::post('auth/login', [\App\Http\Controllers\Api\V1\AuthController::class, 'login']);
-    Route::get('check-subdomain', [\App\Http\Controllers\Api\V1\CompanyController::class, 'checkSubdomain']);
+    Route::middleware(\App\Http\Middleware\DeviceApiKeyAuth::class)->post('device/authenticate', [\App\Http\Controllers\Api\V1\DeviceController::class, 'authenticate']);
+    Route::middleware('auth:sanctum')->group(function () {
+        // API routes will go here
+    });
     // API v1 routes will go here
 });

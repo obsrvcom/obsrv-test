@@ -24,9 +24,9 @@ class EnsureCompanyAdmin
                 return redirect()->route('company.select');
             }
 
-            // Check if user is admin or owner
+            // Check if user is admin
             if (!$company->isUserAdmin($user)) {
-                return redirect()->route('dashboard')->with('error', 'You do not have permission to access company settings.');
+                return redirect()->route('company.dashboard', ['company' => $company->id])->with('error', 'You do not have permission to access company settings.');
             }
         }
 

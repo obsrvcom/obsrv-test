@@ -17,7 +17,7 @@ class CompanyController extends Controller
         ]);
 
         $user = Auth::user();
-        $companies = $user->companies;
+        $companies = $user->companies()->with('users')->get();
 
         // If user has no companies, redirect to create one
         if ($companies->count() === 0) {
@@ -50,10 +50,8 @@ class CompanyController extends Controller
         // Set current company in session
         session(['current_company_id' => $company->id]);
 
-        // Redirect to the subdomain dashboard
-        $host = request()->getHost();
-        $domain = $this->extractDomain($host);
-        return redirect()->away("http://{$company->subdomain}.{$domain}/dashboard");
+        // Redirect to the new company dashboard route
+        return redirect()->route('company.dashboard', ['company' => $company->id]);
     }
 
     public function create()
@@ -71,27 +69,33 @@ class CompanyController extends Controller
     {
         \Log::info('Company creation started', [
             'user_id' => Auth::id(),
-            'request_data' => $request->only(['name', 'subdomain', 'description'])
+            'request_data' => $request->only(['name', 'description'])
         ]);
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'subdomain' => 'required|string|max:255|unique:companies,subdomain|regex:/^[a-z0-9]+$/',
             'description' => 'nullable|string',
         ]);
+
+        // Rate limit company creation by user and IP
+        $maxAttempts = 3;
+        $decayMinutes = 10;
+        $key = 'company-create:' . $request->ip() . ':' . Auth::id();
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($key, $maxAttempts)) {
+            return back()->with('error', 'Too many company creation attempts. Please try again later.');
+        }
+        \Illuminate\Support\Facades\RateLimiter::hit($key, $decayMinutes * 60);
 
         \Log::info('Company creation validation passed');
 
         $company = Company::create([
             'name' => $request->name,
-            'subdomain' => $request->subdomain,
             'description' => $request->description,
         ]);
 
         \Log::info('Company created', [
             'company_id' => $company->id,
-            'company_name' => $company->name,
-            'subdomain' => $company->subdomain
+            'company_name' => $company->name
         ]);
 
         // Add the current user as owner
@@ -105,32 +109,13 @@ class CompanyController extends Controller
         // Set as current company
         session(['current_company_id' => $company->id]);
 
-        // Redirect to the subdomain dashboard
-        $host = request()->getHost();
-        $domain = $this->extractDomain($host);
-        $redirectUrl = "http://{$company->subdomain}.{$domain}/dashboard";
-
-        \Log::info('Redirecting to company dashboard', [
-            'redirect_url' => $redirectUrl,
-            'host' => $host,
-            'domain' => $domain,
-            'subdomain' => $company->subdomain
-        ]);
-
-        return redirect()->away($redirectUrl)->with('success', 'Company created successfully!');
+        // Redirect to the new company dashboard route
+        return redirect()->route('company.dashboard', ['company' => $company->id])->with('success', 'Company created successfully!');
     }
 
-    private function extractDomain($host)
+    public function show($companyId)
     {
-        // Extract domain (everything after the first dot)
-        $parts = explode('.', $host);
-
-        if (count($parts) <= 2) {
-            return $host; // No subdomain, return full host
-        }
-
-        // Remove subdomain and return domain
-        array_shift($parts);
-        return implode('.', $parts);
+        $company = Company::findOrFail($companyId);
+        return view('company.show', compact('company'));
     }
 }

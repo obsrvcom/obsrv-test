@@ -29,7 +29,7 @@ class DeviceAndAuthHeaders
                 return response()->json(['message' => 'Device not found'], 404);
             }
             // Only check for revoked devices on API routes, not web routes
-            if ($device->revoked && $request->is('api/*')) {
+            if ($device->revoked) {
                 return response()->json(['message' => 'Device revoked. Please reset.'], 403);
             }
             // If user is authenticated, check device ownership

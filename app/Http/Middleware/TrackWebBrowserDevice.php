@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 use App\Models\Device;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class TrackWebBrowserDevice
 {
@@ -42,6 +43,7 @@ class TrackWebBrowserDevice
                     'ip_address' => $ipAddress,
                     'fingerprint' => $fingerprint,
                     'last_seen' => now(),
+                    'uuid' => (string) Str::uuid(),
                 ]);
 
                 Log::info('Created new web browser device', [
@@ -56,7 +58,6 @@ class TrackWebBrowserDevice
                     'last_seen' => now(),
                     'ip_address' => $ipAddress,
                     'fingerprint' => $fingerprint, // Update fingerprint in case it changed
-                    'revoked' => false, // Reactivate the device if it was revoked
                 ]);
             }
         }

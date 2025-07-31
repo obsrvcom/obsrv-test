@@ -52,3 +52,28 @@ select:focus[data-flux-control] {
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */
+
+/* Prevent mobile bounce scroll by making main content area scrollable */
+html, body {
+  height: 100%;
+  overscroll-behavior-y: none;
+}
+
+@media (max-width: 768px) {
+  .main-scroll-area {
+    height: 100vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Ensure header is always large enough */
+flux\:header, .flux-header, .app-header {
+  min-height: 4rem;
+}
+
+@media (max-width: 768px) {
+  flux\:header, .flux-header, .app-header {
+    min-height: 3.5rem;
+  }
+}

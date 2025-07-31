@@ -1,5 +1,5 @@
 <x-layouts.app :title="__('Dashboard')">
-    <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
+    <div class="main-scroll-area flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
         @php
             $currentCompany = auth()->user()->currentCompanyFromRequest() ?? auth()->user()->currentCompany();
         @endphp
@@ -16,9 +16,6 @@
                                 {{ $currentCompany->description }}
                             </p>
                         @endif
-                        <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">
-                            <span class="font-medium">Subdomain:</span> {{ $currentCompany->subdomain }}.yourdomain.com
-                        </p>
                     </div>
                     <div class="flex items-center space-x-2">
                         @if($currentCompany->getUserRole(auth()->user()) === 'owner')

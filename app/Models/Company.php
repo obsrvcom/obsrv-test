@@ -11,13 +11,37 @@ class Company extends Model
 
     protected $fillable = [
         'name',
-        'subdomain',
         'description',
     ];
 
     public function users()
     {
-        return $this->belongsToMany(User::class)->withPivot('role')->withTimestamps();
+        return $this->belongsToMany(User::class)->withPivot('role', 'job_title')->withTimestamps();
+    }
+
+    public function sites()
+    {
+        return $this->hasMany(Site::class);
+    }
+
+    public function contacts()
+    {
+        return $this->hasMany(Contact::class);
+    }
+
+    public function siteGroups()
+    {
+        return $this->hasMany(SiteGroup::class);
+    }
+
+    public function contactGroups()
+    {
+        return $this->hasMany(ContactGroup::class);
+    }
+
+    public function teams()
+    {
+        return $this->hasMany(Team::class);
     }
 
     public function hasUser(User $user)
@@ -33,11 +57,7 @@ class Company extends Model
 
     public function isUserAdmin(User $user)
     {
-        return in_array($this->getUserRole($user), ['admin', 'owner']);
-    }
-
-    public function isUserOwner(User $user)
-    {
-        return $this->getUserRole($user) === 'owner';
+        $role = $this->getUserRole($user);
+        return in_array($role, ['admin', 'owner']);
     }
 }

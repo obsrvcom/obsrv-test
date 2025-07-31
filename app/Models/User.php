@@ -23,6 +23,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'email_verified_at',
     ];
 
     /**
@@ -73,7 +74,7 @@ class User extends Authenticatable
      */
     public function companies()
     {
-        return $this->belongsToMany(Company::class)->withPivot('role')->withTimestamps();
+        return $this->belongsToMany(Company::class)->withPivot('role', 'job_title')->withTimestamps();
     }
 
         /**
@@ -102,5 +103,43 @@ class User extends Authenticatable
         }
 
         return null;
+    }
+
+    public function sites()
+    {
+        return $this->belongsToMany(Site::class)->withTimestamps();
+    }
+
+    public function teams()
+    {
+        return $this->belongsToMany(Team::class)->withTimestamps();
+    }
+
+    public function siteChats()
+    {
+        return $this->hasMany(\App\Models\SiteChat::class);
+    }
+
+    public function canAccessSite(Site $site)
+    {
+        // Direct site user
+        if ($this->sites()->where('site_id', $site->id)->exists()) {
+            return true;
+        }
+        // Company member
+        if ($site->company && $site->company->hasUser($this)) {
+            return true;
+        }
+        return false;
+    }
+
+    public function accessibleSites()
+    {
+        // Get all sites the user can access: direct or via company
+        $siteIds = $this->sites()->pluck('sites.id')->toArray();
+        $companyIds = $this->companies()->pluck('companies.id')->toArray();
+        $companySites = \App\Models\Site::whereIn('company_id', $companyIds)->pluck('id')->toArray();
+        $allSiteIds = array_unique(array_merge($siteIds, $companySites));
+        return \App\Models\Site::whereIn('id', $allSiteIds)->get();
     }
 }

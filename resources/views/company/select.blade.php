@@ -19,7 +19,7 @@
         <div class="space-y-3">
             @foreach($companies as $company)
                 <div class="block">
-                    <a href="http://{{ $company->subdomain }}.{{ $appDomain }}" class="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left block">
+                    <a href="{{ route('company.dashboard', ['company' => $company->id]) }}" class="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left block">
                         <div class="flex items-center justify-between">
                             <div>
                                 <h3 class="font-medium text-gray-900 dark:text-white">
@@ -31,7 +31,7 @@
                                     </p>
                                 @endif
                                 <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                                    {{ $company->subdomain }}.{{ $appDomain }}
+                                    Company ID: {{ $company->id }}
                                 </p>
                             </div>
                             <div class="flex items-center space-x-2">
@@ -66,12 +66,6 @@
             >
                 Create New Company
             </flux:button>
-        </div>
-
-        <div class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <p class="text-sm text-blue-800 dark:text-blue-200">
-                <strong>Subdomain Access:</strong> Each company has its own subdomain for isolated workspaces.
-            </p>
         </div>
     </div>
 </x-layouts.auth>

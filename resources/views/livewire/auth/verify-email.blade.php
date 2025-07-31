@@ -13,8 +13,12 @@ new #[Layout('components.layouts.auth')] class extends Component {
     public function sendVerification(): void
     {
         if (Auth::user()->hasVerifiedEmail()) {
-            $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
-
+            $companyId = session('current_company_id');
+            if ($companyId) {
+                $this->redirectIntended(default: route('company.dashboard', ['company' => $companyId], false), navigate: true);
+            } else {
+                $this->redirectIntended(default: route('company.select', false), navigate: true);
+            }
             return;
         }
 

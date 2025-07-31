@@ -22,7 +22,6 @@ class CompanyFactory extends Factory
 
         return [
             'name' => $name,
-            'subdomain' => $subdomain,
             'description' => $this->faker->sentence(),
         ];
     }

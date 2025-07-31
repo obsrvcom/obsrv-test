@@ -31,31 +31,9 @@ new #[Layout('components.layouts.auth')] class extends Component {
 
         Auth::login($user);
 
-        // Determine redirect based on current domain
-        $host = request()->getHost();
-        $subdomain = $this->extractSubdomain($host);
-
-        if (!$subdomain || $subdomain === 'www') {
-            // On main domain - redirect to company selection
-            $this->redirect(route('company.select', absolute: false), navigate: true);
-        } else {
-            // On subdomain - redirect to dashboard
-            $this->redirect(route('dashboard', absolute: false), navigate: true);
-        }
-    }
-
-    /**
-     * Extract subdomain from host.
-     */
-    private function extractSubdomain($host)
-    {
-        $parts = explode('.', $host);
-
-        if (count($parts) <= 2) {
-            return null; // No subdomain
-        }
-
-        return $parts[0];
+        // After registration, use centralized redirect service
+        $redirectUrl = \App\Services\PostLoginRedirectService::getPostLoginRedirect();
+        $this->redirect($redirectUrl, navigate: true);
     }
 }; ?>
 

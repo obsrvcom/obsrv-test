@@ -3,9 +3,9 @@
 use App\Models\User;
 use App\Models\Company;
 use Livewire\Volt\Volt;
-use Tests\SubdomainTestTrait;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class, SubdomainTestTrait::class);
+uses(RefreshDatabase::class);
 
 test('profile page is displayed', function () {
     $user = User::factory()->create();

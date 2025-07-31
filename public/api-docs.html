@@ -409,7 +409,121 @@
     "created_at": "2024-01-01T00:00:00.000000Z",
     "updated_at": "2024-01-01T00:00:00.000000Z"
   },
-  "device_id": 123
+  "device_id": 123,
+  "fcm_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h3>
+                    <span class="method post">POST</span>
+                    <span class="url">/api/v1/device/heartbeat</span>
+                </h3>
+                <div class="description">
+                    Check device status and automatically retrieve FCM token when authenticated. Requires device API key authentication.
+                </div>
+
+                <div class="params">
+                    <h4>Headers Required</h4>
+                    <div class="param">
+                        <span class="param-name">Authorization</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">Required</span>
+                    </div>
+                </div>
+
+                <div class="response">
+                    <h4>Response</h4>
+                    <div class="status success">200 OK</div>
+                    <div class="example">
+                        <pre>{
+  "registered": true,
+  "authentication_request_pending": false,
+  "authentication_request_email": null,
+  "authenticated": true,
+  "fcm_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h3>
+                    <span class="method post">POST</span>
+                    <span class="url">/api/v1/device/authenticate</span>
+                </h3>
+                <div class="description">
+                    Request authentication for a device by sending a magic link to the specified email address.
+                </div>
+
+                <div class="params">
+                    <h4>Request Parameters</h4>
+                    <div class="param">
+                        <span class="param-name">email</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">Required</span>
+                    </div>
+                </div>
+
+                <div class="example">
+                    <pre>{
+  "email": "user@example.com"
+}</pre>
+                </div>
+
+                <div class="response">
+                    <h4>Response</h4>
+                    <div class="status success">202 Accepted</div>
+                    <div class="example">
+                        <pre>{
+  "message": "Authentication request pending. Magic link sent to email.",
+  "authentication_request_pending": true,
+  "authentication_request_email": "user@example.com"
+}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h3>
+                    <span class="method get">GET</span>
+                    <span class="url">/api/v1/device/fcm-token</span>
+                </h3>
+                <div class="description">
+                    Get the Firebase Cloud Messaging (FCM) authentication token for the authenticated device.
+                </div>
+
+                <div class="response">
+                    <h4>Response</h4>
+                    <div class="status success">200 OK</div>
+                    <div class="example">
+                        <pre>{
+  "fcm_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "device_id": 123,
+  "user_id": 1
+}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h3>
+                    <span class="method post">POST</span>
+                    <span class="url">/api/v1/device/refresh-fcm-token</span>
+                </h3>
+                <div class="description">
+                    Refresh the Firebase Cloud Messaging (FCM) authentication token for the authenticated device.
+                </div>
+
+                <div class="response">
+                    <h4>Response</h4>
+                    <div class="status success">200 OK</div>
+                    <div class="example">
+                        <pre>{
+  "fcm_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "message": "FCM token refreshed successfully"
 }</pre>
                     </div>
                 </div>

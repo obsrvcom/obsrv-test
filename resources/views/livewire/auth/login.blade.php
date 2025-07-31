@@ -65,17 +65,9 @@ new #[Layout('components.layouts.auth')] class extends Component {
         RateLimiter::clear($this->throttleKey());
         Session::regenerate();
 
-        // Determine redirect based on current domain
-        $host = request()->getHost();
-        $subdomain = $this->extractSubdomain($host);
-
-        if (!$subdomain || $subdomain === 'www') {
-            // On main domain - redirect to company selection
-            $this->redirect(route('company.select', absolute: false), navigate: true);
-        } else {
-            // On subdomain - redirect to dashboard
-            $this->redirect(route('dashboard', absolute: false), navigate: true);
-        }
+        // After login, use centralized redirect service
+        $redirectUrl = \App\Services\PostLoginRedirectService::getPostLoginRedirect();
+        $this->redirect($redirectUrl, navigate: true);
     }
 
     /**
@@ -90,11 +82,15 @@ new #[Layout('components.layouts.auth')] class extends Component {
         // Generate a secure token
         $token = Str::random(64);
 
-        // Store the token in cache with expiration (15 minutes)
-        cache()->put("magic_link_{$token}", $this->email, now()->addMinutes(15));
+        // Store the token and remember preference in cache with expiration (15 minutes)
+        $magicLinkData = [
+            'email' => $this->email,
+            'remember' => true, // Always remember for magic link
+        ];
+        cache()->put("magic_link_{$token}", $magicLinkData, now()->addMinutes(15));
 
-        // Send the magic link email
-        \Illuminate\Support\Facades\Mail::to($this->email)->send(new \App\Mail\MagicLinkMail($token));
+        // Send the magic link email in background
+        \Illuminate\Support\Facades\Mail::to($this->email)->queue(new \App\Mail\MagicLinkMail($token));
 
         $this->linkSent = true;
         RateLimiter::clear($this->throttleKey());
@@ -137,20 +133,6 @@ new #[Layout('components.layouts.auth')] class extends Component {
     protected function throttleKey(): string
     {
         return Str::transliterate(Str::lower($this->email).'|'.request()->ip());
-    }
-
-    /**
-     * Extract subdomain from host.
-     */
-    private function extractSubdomain($host)
-    {
-        $parts = explode('.', $host);
-
-        if (count($parts) <= 2) {
-            return null; // No subdomain
-        }
-
-        return $parts[0];
     }
 }; ?>
 
@@ -233,10 +215,11 @@ new #[Layout('components.layouts.auth')] class extends Component {
                     <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
                         We'll send you a secure link to sign in without a password.
                     </p>
+                    <flux:checkbox wire:model="remember" :label="__('Remember me')" />
                     <flux:button
                         variant="outline"
                         wire:click="sendMagicLink"
-                        class="w-full"
+                        class="w-full mt-3"
                     >
                         {{ __('Send Magic Link') }}
                     </flux:button>

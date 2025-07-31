@@ -9,18 +9,36 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class MagicLinkMail extends Mailable
+class MagicLinkMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
     public string $token;
+    public $site;
+    public $company;
+    public $isInvitation = false;
+    public $siteName = null;
+    public $companyName = null;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(string $token)
+    public function __construct(string $token, $entity = null, $isInvitation = false)
     {
         $this->token = $token;
+        $this->isInvitation = $isInvitation;
+
+        if ($entity instanceof \App\Models\Site) {
+            $this->site = $entity;
+            $this->siteName = $entity->name;
+        } elseif ($entity instanceof \App\Models\Company) {
+            $this->company = $entity;
+            $this->companyName = $entity->name;
+        } else {
+            // Legacy support - assume it's a site
+            $this->site = $entity;
+            $this->siteName = $entity ? $entity->name : null;
+        }
     }
 
     /**
@@ -40,6 +58,14 @@ class MagicLinkMail extends Mailable
     {
         return new Content(
             view: 'emails.magic-link',
+            with: [
+                'token' => $this->token,
+                'site' => $this->site,
+                'company' => $this->company,
+                'isInvitation' => $this->isInvitation,
+                'siteName' => $this->siteName,
+                'companyName' => $this->companyName,
+            ],
         );
     }
 
