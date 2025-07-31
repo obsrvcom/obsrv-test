@@ -14,11 +14,12 @@
     if (str_starts_with($routeName, 'company.')) {
         $company = $route->parameter('company');
         if ($company) {
-            // Add company context
+            // Add header view selector instead of company name
             $segments[] = [
-                'url' => route('company.dashboard', $company),
-                'label' => $company->name,
-                'icon' => null
+                'url' => null,
+                'label' => null,
+                'icon' => null,
+                'component' => 'header_view_selector'
             ];
 
             // Add current page
@@ -69,11 +70,12 @@
     } elseif (str_starts_with($routeName, 'site.')) {
         $site = $route->parameter('site');
         if ($site) {
-            // Add site context
+            // Add header view selector instead of site name
             $segments[] = [
-                'url' => route('site.dashboard', $site),
-                'label' => $site->name,
-                'icon' => null
+                'url' => null,
+                'label' => null,
+                'icon' => null,
+                'component' => 'header_view_selector'
             ];
 
             // Add current page
@@ -121,7 +123,11 @@
 
 <flux:breadcrumbs>
     @foreach($segments as $index => $segment)
-        @if($segment['icon'])
+        @if(isset($segment['component']) && $segment['component'] === 'header_view_selector')
+            <flux:breadcrumbs.item separator="slash">
+                <livewire:header-view-selector />
+            </flux:breadcrumbs.item>
+        @elseif($segment['icon'])
             <flux:breadcrumbs.item
                 :href="$segment['url']"
                 icon="{{ $segment['icon'] }}"

@@ -12,6 +12,7 @@ class Company extends Model
     protected $fillable = [
         'name',
         'description',
+        'avatar',
     ];
 
     public function users()
@@ -59,5 +60,21 @@ class Company extends Model
     {
         $role = $this->getUserRole($user);
         return in_array($role, ['admin', 'owner']);
+    }
+
+    public function getAvatarUrl()
+    {
+        if ($this->avatar) {
+            return asset('storage/' . $this->avatar);
+        }
+        return null;
+    }
+
+    public function getAvatarOrInitials()
+    {
+        if ($this->avatar) {
+            return ['type' => 'image', 'src' => $this->getAvatarUrl()];
+        }
+        return ['type' => 'initials', 'initials' => substr($this->name, 0, 2)];
     }
 }

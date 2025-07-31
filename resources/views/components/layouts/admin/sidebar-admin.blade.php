@@ -9,12 +9,10 @@
     }
 @endphp
 <flux:sidebar sticky stashable class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-    <div class="flex items-center justify-between w-full px-4 lg:hidden" style="min-height: 3.5rem;">
+    <div class="flex items-center justify-between w-full px-4" style="min-height: 3.5rem;">
         <span class="font-bold text-xl tracking-tight text-zinc-900 dark:text-white">Obsrv</span>
         <flux:sidebar.toggle class="lg:hidden self-center" icon="x-mark" style="height: 2rem; width: 2rem;" />
     </div>
-
-    <livewire:view-selector />
 
     <flux:navlist variant="outline">
         <flux:navlist.item icon="home" :href="$currentCompany ? route('company.dashboard', ['company' => $currentCompany->id]) : '#'" :current="request()->routeIs('company.dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
@@ -34,7 +32,7 @@
             <flux:navlist.item icon="credit-card" :href="$currentCompany ? route('company.service', ['company' => $currentCompany->id]) : '#'" :current="request()->routeIs('company.service')" wire:navigate>{{ __('Service Plans') }}</flux:navlist.item>
             <flux:navlist.item icon="users" :href="$currentCompany ? route('company.users', ['company' => $currentCompany->id]) : '#'" :current="request()->routeIs('company.users') || request()->routeIs('company.teams')" wire:navigate>{{ __('Users') }}</flux:navlist.item>
             <flux:navlist.item icon="banknotes" :href="$currentCompany ? route('company.billing', ['company' => $currentCompany->id]) : '#'" :current="request()->routeIs('company.billing')" wire:navigate>{{ __('Billing') }}</flux:navlist.item>
-            <flux:navlist.item icon="cog-6-tooth" :href="$currentCompany ? route('company.settings', ['company' => $currentCompany->id]) : '#'" :current="request()->routeIs('company.settings*')">
+            <flux:navlist.item icon="cog-6-tooth" :href="$currentCompany ? route('company.settings.profile', ['company' => $currentCompany->id]) : '#'" :current="request()->routeIs('company.settings*')" wire:navigate>
                 {{ __('Settings') }}
             </flux:navlist.item>
         </flux:navlist.group>

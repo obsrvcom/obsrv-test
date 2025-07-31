@@ -1,5 +1,8 @@
 <div class="contents">
-    <livewire:view-selector />
+    <div class="flex items-center justify-between w-full px-4" style="min-height: 3.5rem;">
+        <span class="font-bold text-xl tracking-tight text-zinc-900 dark:text-white">Obsrv</span>
+        <flux:sidebar.toggle class="lg:hidden self-center" icon="x-mark" style="height: 2rem; width: 2rem;" />
+    </div>
 
     @if($companyName)
         <div class="px-4 py-2 text-xs text-zinc-500 dark:text-zinc-400">

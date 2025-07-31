@@ -1,10 +1,8 @@
 <div class="contents">
-    <div class="flex items-center justify-between w-full px-4 lg:hidden" style="min-height: 3.5rem;">
+    <div class="flex items-center justify-between w-full px-4" style="min-height: 3.5rem;">
         <span class="font-bold text-xl tracking-tight text-zinc-900 dark:text-white">Obsrv</span>
         <flux:sidebar.toggle class="lg:hidden self-center" icon="x-mark" style="height: 2rem; width: 2rem;" />
     </div>
-
-    <livewire:view-selector />
 
     <flux:navlist variant="outline">
         <flux:navlist.item icon="home" :href="$company ? route('company.dashboard', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
@@ -26,7 +24,7 @@
             <flux:navlist.group :heading="__('Company Admin')" class="grid">
                 <flux:navlist.item icon="users" :href="$company ? route('company.users', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.users') || request()->routeIs('company.teams')" wire:navigate>{{ __('Users') }}</flux:navlist.item>
                 <flux:navlist.item icon="banknotes" :href="$company ? route('company.billing', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.billing')" wire:navigate>{{ __('Billing') }}</flux:navlist.item>
-                <flux:navlist.item icon="cog-6-tooth" :href="$company ? route('company.settings', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.settings*')">
+                <flux:navlist.item icon="cog-6-tooth" :href="$company ? route('company.settings.profile', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.settings*')" wire:navigate>
                     {{ __('Settings') }}
                 </flux:navlist.item>
             </flux:navlist.group>

@@ -1,13 +1,17 @@
 <?php
 
-use function Livewire\Volt\{state, mount, layout, rules};
+use function Livewire\Volt\{state, mount, layout, rules, uses};
 use Flux\Flux;
+use Livewire\WithFileUploads;
+
+uses([WithFileUploads::class]);
 
 layout('components.layouts.company');
 
 state([
     'name' => '',
     'description' => '',
+    'avatar' => null,
     'isLoading' => false,
     'currentCompany' => null
 ]);
@@ -15,6 +19,7 @@ state([
 rules([
     'name' => 'required|string|max:255',
     'description' => 'nullable|string|max:1000',
+    'avatar' => 'nullable|image|max:2048',
 ]);
 
 mount(function() {
@@ -36,6 +41,27 @@ mount(function() {
     }
 });
 
+$removeAvatar = function() {
+    try {
+        if (!$this->currentCompany) {
+            Flux::toast(text: 'Company not found.', variant: 'danger', duration: 3500);
+            return;
+        }
+
+        if ($this->currentCompany->avatar) {
+            \Storage::disk('public')->delete($this->currentCompany->avatar);
+            $this->currentCompany->update(['avatar' => null]);
+
+            // Dispatch event to update view selector
+            $this->dispatch('company-avatar-updated', companyId: $this->currentCompany->id);
+
+            Flux::toast(text: 'Avatar removed successfully.', variant: 'success', duration: 3500);
+        }
+    } catch (\Exception $e) {
+        Flux::toast(text: 'Failed to remove avatar.', variant: 'danger', duration: 3500);
+    }
+};
+
 $save = function() {
     // Validate the input
     $this->validate();
@@ -50,10 +76,30 @@ $save = function() {
 
         // Admin access is already enforced by middleware
 
-        $this->currentCompany->update([
+        $updateData = [
             'name' => $this->name,
             'description' => $this->description,
-        ]);
+        ];
+
+        // Handle avatar upload
+        if ($this->avatar) {
+            // Delete old avatar if exists
+            if ($this->currentCompany->avatar) {
+                \Storage::disk('public')->delete($this->currentCompany->avatar);
+            }
+
+            // Store new avatar
+            $avatarPath = $this->avatar->store('company-avatars', 'public');
+            $updateData['avatar'] = $avatarPath;
+
+            // Reset avatar input after saving
+            $this->avatar = null;
+        }
+
+        $this->currentCompany->update($updateData);
+
+        // Dispatch event to update view selector for any company profile changes
+        $this->dispatch('company-avatar-updated', companyId: $this->currentCompany->id);
 
         Flux::toast(text: 'Company information updated successfully.', variant: 'success', duration: 3500);
 
@@ -135,6 +181,59 @@ $save = function() {
                 @error('description')
                     <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                 @enderror
+
+                <!-- Company Avatar -->
+                <div class="space-y-4">
+                    <flux:field>
+                        <flux:label>Company Avatar</flux:label>
+
+                        @if($currentCompany->avatar)
+                            <div class="flex items-center gap-4 mb-3">
+                                <div class="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 flex-shrink-0">
+                                    <img src="{{ $currentCompany->getAvatarUrl() }}"
+                                         alt="{{ $currentCompany->name }}"
+                                         class="w-full h-full object-cover">
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Current avatar</p>
+                                    <flux:button
+                                        wire:click="removeAvatar"
+                                        variant="danger"
+                                        size="sm"
+                                        class="mt-1"
+                                    >
+                                        Remove Avatar
+                                    </flux:button>
+                                </div>
+                            </div>
+                        @endif
+
+                        <flux:input
+                            type="file"
+                            wire:model="avatar"
+                            accept="image/*"
+                        />
+
+                        @if($avatar)
+                            <div class="mt-3">
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Preview:</p>
+                                <div class="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
+                                    <img src="{{ $avatar->temporaryUrl() }}"
+                                         alt="Preview"
+                                         class="w-full h-full object-cover">
+                                </div>
+                            </div>
+                        @endif
+
+                        <flux:description>
+                            Upload a company logo or avatar (max 2MB). Recommended size: 200x200 pixels.
+                        </flux:description>
+                    </flux:field>
+
+                    @error('avatar')
+                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
 
                 <div class="flex items-center justify-end">
                     <flux:button
