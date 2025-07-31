@@ -31,8 +31,9 @@
 
             <div class="divide-y divide-gray-200">
                 @foreach($this->tickets as $ticket)
-                    <div class="px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer grid grid-cols-12 gap-4 items-center"
-                         wire:click="openTicket({{ $ticket->id }})">
+                    <a href="{{ route('site.tickets.view', ['site' => $site->id, 'ticketId' => $ticket->id]) }}"
+                       wire:navigate
+                       class="block px-6 py-4 hover:bg-gray-50 transition-colors grid grid-cols-12 gap-4 items-center">
 
                         <!-- Ticket Number -->
                         <div class="col-span-2">
@@ -79,7 +80,7 @@
                                 Open
                             </flux:button>
                         </div>
-                    </div>
+                    </a>
                 @endforeach
             </div>
         </div>

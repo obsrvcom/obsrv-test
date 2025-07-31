@@ -2,7 +2,7 @@
     <!-- Simple header with back button and status -->
     <div class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex-shrink-0">
         <div class="flex items-center justify-between">
-                            <flux:button wire:click="goBack" variant="ghost" size="sm">
+                            <flux:button href="{{ route('site.tickets', ['site' => $site->id]) }}" wire:navigate variant="ghost" size="sm">
                     <flux:icon.arrow-left class="w-4 h-4" />
                     Back to Support
                 </flux:button>

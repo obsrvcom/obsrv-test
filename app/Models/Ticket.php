@@ -23,11 +23,14 @@ class Ticket extends Model
         'description',
         'last_customer_message_at',
         'last_company_message_at',
+        'hold_until',
+        'hold_reason',
     ];
 
     protected $casts = [
         'last_customer_message_at' => 'datetime',
         'last_company_message_at' => 'datetime',
+        'hold_until' => 'datetime',
     ];
 
     public function site(): BelongsTo
@@ -73,6 +76,11 @@ class Ticket extends Model
     public function activities(): HasMany
     {
         return $this->hasMany(TicketActivity::class);
+    }
+
+    public function drafts(): HasMany
+    {
+        return $this->hasMany(TicketDraft::class);
     }
 
     protected static function boot()

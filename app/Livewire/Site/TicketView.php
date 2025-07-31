@@ -145,11 +145,6 @@ class TicketView extends Component
 
 
 
-    public function goBack()
-    {
-        return $this->redirect(route('site.tickets', ['site' => $this->site->id]));
-    }
-
     public function getStatusColorClass($status)
     {
         return match($status) {

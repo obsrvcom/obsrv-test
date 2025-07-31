@@ -113,11 +113,6 @@ class Tickets extends Component
         return $this->company->teams()->get();
     }
 
-    public function openTicket($ticketId)
-    {
-        return $this->redirect(route('company.tickets.view', ['company' => $this->company->id, 'ticket' => $ticketId]));
-    }
-
     public function getStatusColorClass($status)
     {
         return match($status) {

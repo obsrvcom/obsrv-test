@@ -52,8 +52,9 @@
     <!-- Tickets List -->
     <div class="space-y-4">
         @forelse($this->tickets as $ticket)
-            <div class="bg-white rounded-lg border border-gray-200 border-l-4 {{ $this->getPriorityClass($ticket) }} hover:shadow-md transition-shadow cursor-pointer"
-                 wire:click="openTicket({{ $ticket->id }})">
+            <a href="{{ route('company.tickets.view', ['company' => $company->id, 'ticket' => $ticket->id]) }}"
+               wire:navigate
+               class="block bg-white rounded-lg border border-gray-200 border-l-4 {{ $this->getPriorityClass($ticket) }} hover:shadow-md transition-shadow">
                 <div class="p-6">
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
@@ -104,7 +105,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </a>
         @empty
             <div class="bg-white rounded-lg border border-gray-200 py-16">
                 <div class="text-center">

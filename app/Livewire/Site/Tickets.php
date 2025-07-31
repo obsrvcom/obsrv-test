@@ -114,11 +114,6 @@ class Tickets extends Component
         return $this->redirect(route('site.tickets.view', ['site' => $this->site->id, 'ticketId' => $ticket->id]));
     }
 
-    public function openTicket($ticketId)
-    {
-        return $this->redirect(route('site.tickets.view', ['site' => $this->site->id, 'ticketId' => $ticketId]));
-    }
-
     public function getStatusColorClass($status)
     {
         return match($status) {
