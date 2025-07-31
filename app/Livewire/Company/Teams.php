@@ -15,12 +15,14 @@ class Teams extends Component
     public $teamName = '';
     public $teamColor = 'blue';
     public $allowDirectTickets = false;
+    public $canBeAssignedTickets = true;
     public $showCreateTeamModal = false;
     public $showEditTeamModal = false;
     public $editingTeam = null;
     public $editTeamName = '';
     public $editTeamColor = 'blue';
     public $editAllowDirectTickets = false;
+    public $editCanBeAssignedTickets = true;
     public $showDeleteTeamModal = false;
     public $teamIdToDelete = null;
     public $showAddToTeamModal = false;
@@ -38,9 +40,11 @@ class Teams extends Component
         'teamName' => 'required|string|max:255',
         'teamColor' => 'required|string|in:red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose',
         'allowDirectTickets' => 'boolean',
+        'canBeAssignedTickets' => 'boolean',
         'editTeamName' => 'required|string|max:255',
         'editTeamColor' => 'required|string|in:red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose',
         'editAllowDirectTickets' => 'boolean',
+        'editCanBeAssignedTickets' => 'boolean',
     ];
 
     public function mount($company = null)
@@ -111,6 +115,7 @@ class Teams extends Component
             ],
             'teamColor' => 'required|string|in:red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose',
             'allowDirectTickets' => 'boolean',
+            'canBeAssignedTickets' => 'boolean',
         ], [
             'teamName.unique' => 'A team with this name already exists in your company.',
         ]);
@@ -119,6 +124,7 @@ class Teams extends Component
             'name' => $this->teamName,
             'color' => $this->teamColor,
             'allow_direct_tickets' => $this->allowDirectTickets,
+            'can_be_assigned_tickets' => $this->canBeAssignedTickets,
             'company_id' => $this->company->id,
         ]);
 
@@ -133,6 +139,7 @@ class Teams extends Component
             $this->editTeamName = $this->editingTeam->name;
             $this->editTeamColor = $this->editingTeam->color ?? 'blue';
             $this->editAllowDirectTickets = $this->editingTeam->allow_direct_tickets ?? false;
+            $this->editCanBeAssignedTickets = $this->editingTeam->can_be_assigned_tickets ?? true;
             $this->showEditTeamModal = true;
         }
     }
@@ -141,7 +148,7 @@ class Teams extends Component
     {
         $this->showEditTeamModal = false;
         $this->editingTeam = null;
-        $this->reset(['editTeamName', 'editTeamColor', 'editAllowDirectTickets']);
+        $this->reset(['editTeamName', 'editTeamColor', 'editAllowDirectTickets', 'editCanBeAssignedTickets']);
     }
 
     public function updateTeam()
@@ -155,6 +162,7 @@ class Teams extends Component
             ],
             'editTeamColor' => 'required|string|in:red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose',
             'editAllowDirectTickets' => 'boolean',
+            'editCanBeAssignedTickets' => 'boolean',
         ], [
             'editTeamName.unique' => 'A team with this name already exists in your company.',
         ]);
@@ -164,6 +172,7 @@ class Teams extends Component
                 'name' => $this->editTeamName,
                 'color' => $this->editTeamColor,
                 'allow_direct_tickets' => $this->editAllowDirectTickets,
+                'can_be_assigned_tickets' => $this->editCanBeAssignedTickets,
             ]);
 
             $this->closeEditTeamModal();

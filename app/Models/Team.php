@@ -14,10 +14,12 @@ class Team extends Model
         'color',
         'company_id',
         'allow_direct_tickets',
+        'can_be_assigned_tickets',
     ];
 
     protected $casts = [
         'allow_direct_tickets' => 'boolean',
+        'can_be_assigned_tickets' => 'boolean',
     ];
 
     public function company()
@@ -43,5 +45,10 @@ class Team extends Model
     public function scopeAllowingDirectTickets($query)
     {
         return $query->where('allow_direct_tickets', true);
+    }
+
+    public function scopeCanBeAssignedTickets($query)
+    {
+        return $query->where('can_be_assigned_tickets', true);
     }
 }

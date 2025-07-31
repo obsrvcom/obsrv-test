@@ -31,6 +31,8 @@ class TicketView extends Component
     public $showAssignUserModal = false;
     public $showUnassignTeamModal = false;
     public $showUnassignUserModal = false;
+    public $showConfirmTeamAssignModal = false;
+    public $showConfirmUserAssignModal = false;
 
     // Form data
     public $newSiteId = null;
@@ -40,6 +42,9 @@ class TicketView extends Component
     public $holdReason = '';
     public $assignToTeam = null;
     public $assignToUser = null;
+    public $pendingTeamId = null;
+    public $pendingUserId = null;
+    public $pendingStatusChange = null;
 
     protected $listeners = [
         'messageAdded' => '$refresh',
@@ -94,6 +99,11 @@ class TicketView extends Component
         $this->assignToTeam = $this->ticket->assigned_team_id;
         $this->assignToUser = $this->ticket->assigned_user_id;
         $this->newSiteId = $this->ticket->site_id;
+
+        // Initialize assignment selects with current values
+        $this->pendingTeamId = $this->ticket->assigned_team_id;
+        $this->pendingUserId = $this->ticket->assigned_user_id;
+        $this->pendingStatusChange = $this->ticket->status;
 
         // Load existing draft if it exists
         $existingDraft = TicketDraft::where('ticket_id', $this->ticket->id)
@@ -470,12 +480,16 @@ class TicketView extends Component
     {
         $this->showStatusConfirmModal = false;
         $this->pendingStatus = null;
+        // Reset dropdown to current status
+        $this->pendingStatusChange = $this->ticket->status;
     }
 
     public function confirmStatusUpdate()
     {
         if ($this->pendingStatus && in_array($this->pendingStatus, ['open', 'awaiting_customer', 'closed'])) {
             $this->ticket->updateStatus($this->pendingStatus, auth()->id());
+            // Update dropdown to new status
+            $this->pendingStatusChange = $this->pendingStatus;
             $this->dispatch('messageAdded');
         }
         $this->closeStatusConfirmModal();
@@ -496,6 +510,8 @@ class TicketView extends Component
         $this->holdDuration = null;
         $this->customHoldUntil = null;
         $this->holdReason = '';
+        // Reset dropdown to current status
+        $this->pendingStatusChange = $this->ticket->status;
     }
 
     public function putOnHold()
@@ -537,8 +553,28 @@ class TicketView extends Component
 
         $this->ticket->logActivity('status_changed', $description, 'open', 'on_hold', auth()->id());
 
+        // Update dropdown to reflect new status
+        $this->pendingStatusChange = 'on_hold';
         $this->closeOnHoldModal();
         $this->dispatch('messageAdded');
+    }
+
+    // Status Change via Dropdown
+    public function updatedPendingStatusChange($value)
+    {
+        if ($value != $this->ticket->status) {
+            if ($value === 'on_hold') {
+                // Handle on hold specially - open modal
+                $this->openOnHoldModal();
+                // Revert the selection since we're opening a modal
+                $this->pendingStatusChange = $this->ticket->status;
+            } else {
+                // Handle other status changes with confirmation
+                $this->confirmStatusChange($value);
+                // Revert the selection since we're opening a confirmation modal
+                $this->pendingStatusChange = $this->ticket->status;
+            }
+        }
     }
 
     // Team Assignment Methods
@@ -552,6 +588,8 @@ class TicketView extends Component
     {
         $this->showAssignTeamModal = false;
         $this->assignToTeam = $this->ticket->assigned_team_id;
+        // Reset the pending select to current value
+        $this->pendingTeamId = $this->ticket->assigned_team_id;
     }
 
     public function confirmTeamAssignment()
@@ -562,6 +600,8 @@ class TicketView extends Component
 
         if ($this->assignToTeam !== $this->ticket->assigned_team_id) {
             $this->ticket->assignToTeam($this->assignToTeam, auth()->id());
+            // Update the pending select to the new value
+            $this->pendingTeamId = $this->assignToTeam;
             $this->dispatch('messageAdded');
         }
 
@@ -576,11 +616,15 @@ class TicketView extends Component
     public function closeUnassignTeamModal()
     {
         $this->showUnassignTeamModal = false;
+        // Reset the dropdown to current assignment
+        $this->pendingTeamId = $this->ticket->assigned_team_id;
     }
 
     public function unassignTeam()
     {
         $this->ticket->assignToTeam(null, auth()->id());
+        // Update the pending select to null
+        $this->pendingTeamId = null;
         $this->closeUnassignTeamModal();
         $this->dispatch('messageAdded');
     }
@@ -596,6 +640,8 @@ class TicketView extends Component
     {
         $this->showAssignUserModal = false;
         $this->assignToUser = $this->ticket->assigned_user_id;
+        // Reset the pending select to current value
+        $this->pendingUserId = $this->ticket->assigned_user_id;
     }
 
     public function confirmUserAssignment()
@@ -606,6 +652,8 @@ class TicketView extends Component
 
         if ($this->assignToUser !== $this->ticket->assigned_user_id) {
             $this->ticket->assignToUser($this->assignToUser, auth()->id());
+            // Update the pending select to the new value
+            $this->pendingUserId = $this->assignToUser;
             $this->dispatch('messageAdded');
         }
 
@@ -620,18 +668,22 @@ class TicketView extends Component
     public function closeUnassignUserModal()
     {
         $this->showUnassignUserModal = false;
+        // Reset the dropdown to current assignment
+        $this->pendingUserId = $this->ticket->assigned_user_id;
     }
 
     public function unassignUser()
     {
         $this->ticket->assignToUser(null, auth()->id());
+        // Update the pending select to null
+        $this->pendingUserId = null;
         $this->closeUnassignUserModal();
         $this->dispatch('messageAdded');
     }
 
     public function getTeamsProperty()
     {
-        return $this->company->teams()->get();
+        return $this->company->teams()->canBeAssignedTickets()->get();
     }
 
     public function getCompanyUsersProperty()
@@ -664,6 +716,115 @@ class TicketView extends Component
             'closed' => 'Closed',
             default => ucfirst($status)
         };
+    }
+
+    public function getUsersProperty()
+    {
+        return $this->company->users()->get();
+    }
+
+    public function updatedPendingTeamId($value)
+    {
+        // Convert empty string to null for proper comparison
+        if ($value === '' || $value === 'null') {
+            $value = null;
+        }
+
+        if ($value != $this->ticket->assigned_team_id) {
+            if ($value === null || $value === '') {
+                // Handle unassignment
+                $this->confirmUnassignTeam();
+            } else {
+                // Handle assignment/reassignment
+                $this->assignToTeam = $value;
+                $this->confirmDirectTeamAssignment();
+            }
+        }
+    }
+
+    public function updatedPendingUserId($value)
+    {
+        // Convert empty string to null for proper comparison
+        if ($value === '' || $value === 'null') {
+            $value = null;
+        }
+
+        if ($value != $this->ticket->assigned_user_id) {
+            if ($value === null || $value === '') {
+                // Handle unassignment
+                $this->confirmUnassignUser();
+            } else {
+                // Handle assignment/reassignment
+                $this->assignToUser = $value;
+                $this->confirmDirectUserAssignment();
+            }
+        }
+    }
+
+    public function confirmDirectTeamAssignment()
+    {
+        $this->showConfirmTeamAssignModal = true;
+    }
+
+    public function confirmDirectUserAssignment()
+    {
+        $this->showConfirmUserAssignModal = true;
+    }
+
+    public function executeTeamAssignment()
+    {
+        $this->validate([
+            'assignToTeam' => 'nullable|exists:teams,id',
+        ]);
+
+        if ($this->assignToTeam !== $this->ticket->assigned_team_id) {
+            $this->ticket->assignToTeam($this->assignToTeam, auth()->id());
+            $this->pendingTeamId = $this->assignToTeam;
+            $this->dispatch('messageAdded');
+        }
+
+        $this->showConfirmTeamAssignModal = false;
+    }
+
+    public function executeUserAssignment()
+    {
+        $this->validate([
+            'assignToUser' => 'nullable|exists:users,id',
+        ]);
+
+        if ($this->assignToUser !== $this->ticket->assigned_user_id) {
+            $this->ticket->assignToUser($this->assignToUser, auth()->id());
+            $this->pendingUserId = $this->assignToUser;
+            $this->dispatch('messageAdded');
+        }
+
+        $this->showConfirmUserAssignModal = false;
+    }
+
+    public function closeConfirmTeamAssignModal()
+    {
+        $this->showConfirmTeamAssignModal = false;
+        $this->cancelTeamAssignment();
+    }
+
+    public function closeConfirmUserAssignModal()
+    {
+        $this->showConfirmUserAssignModal = false;
+        $this->cancelUserAssignment();
+    }
+
+    public function cancelTeamAssignment()
+    {
+        // Revert to current assignment
+        $this->pendingTeamId = $this->ticket->assigned_team_id;
+        $this->assignToTeam = $this->ticket->assigned_team_id;
+    }
+
+    public function cancelUserAssignment()
+    {
+        // Revert to current assignment
+        $this->pendingUserId = $this->ticket->assigned_user_id;
+        $this->assignToUser = $this->ticket->assigned_user_id;
     }
 
     #[Layout('components.layouts.company')]

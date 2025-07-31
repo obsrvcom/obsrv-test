@@ -164,6 +164,13 @@
                     </flux:text>
                 </div>
 
+                <div>
+                    <flux:checkbox wire:model="canBeAssignedTickets" label="Can Be Assigned Support Tickets" />
+                    <flux:text size="sm" class="mt-1 text-gray-600">
+                        Allow this team to be assigned tickets from company support staff in ticket management.
+                    </flux:text>
+                </div>
+
                 <div class="flex">
                     <flux:spacer />
                     <flux:button variant="ghost" type="button" wire:click="closeCreateTeamModal">Cancel</flux:button>
@@ -202,6 +209,13 @@
                     <flux:checkbox wire:model="editAllowDirectTickets" label="Allow Direct Ticket Creation" />
                     <flux:text size="sm" class="mt-1 text-gray-600">
                         Allow customers to create tickets directly to this team when opening support requests.
+                    </flux:text>
+                </div>
+
+                <div>
+                    <flux:checkbox wire:model="editCanBeAssignedTickets" label="Can Be Assigned Support Tickets" />
+                    <flux:text size="sm" class="mt-1 text-gray-600">
+                        Allow this team to be assigned tickets from company support staff in ticket management.
                     </flux:text>
                 </div>
 

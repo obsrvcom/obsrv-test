@@ -40,103 +40,103 @@
 
 
                     <!-- Ticket Actions -->
-                    <div class="flex flex-wrap items-center gap-4">
+                    <div class="flex flex-wrap items-center justify-between w-full gap-4">
                         <!-- Site Information -->
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs text-gray-500">Site:</span>
-                            <span class="text-sm font-medium text-gray-900">{{ $ticket->site->name }}</span>
+                        <div class="flex items-center gap-2 min-w-0 flex-shrink">
+                            <span class="text-xs text-gray-500 whitespace-nowrap">Site:</span>
+                            <span class="text-sm font-medium text-gray-900 truncate">{{ $ticket->site->name }}</span>
                             <flux:button wire:click="openChangeSiteModal" variant="ghost" size="sm">
                                 <flux:icon.pencil class="w-3 h-3" />
                             </flux:button>
                         </div>
 
                         <!-- Status Actions -->
-                        <div class="flex items-center gap-1">
-                            @if($ticket->status === 'open')
-                                <flux:button variant="primary" size="sm" disabled>
-                                    <flux:icon.check-circle class="w-3 h-3 mr-1" />
-                                    Open
-                                </flux:button>
-                            @else
-                                <flux:button wire:click="confirmStatusChange('open')" variant="outline" size="sm">
-                                    <flux:icon.check-circle class="w-3 h-3 mr-1" />
-                                    Open
-                                </flux:button>
-                            @endif
-
-                            @if($ticket->status === 'awaiting_customer')
-                                <flux:button variant="primary" size="sm" disabled>
-                                    <flux:icon.clock class="w-3 h-3 mr-1" />
-                                    Awaiting
-                                </flux:button>
-                            @else
-                                <flux:button wire:click="confirmStatusChange('awaiting_customer')" variant="outline" size="sm">
-                                    <flux:icon.clock class="w-3 h-3 mr-1" />
-                                    Awaiting
-                                </flux:button>
-                            @endif
-
-                            @if($ticket->status === 'on_hold')
-                                <flux:button variant="primary" size="sm" disabled>
-                                    <flux:icon.pause class="w-3 h-3 mr-1" />
-                                    Hold
-                                </flux:button>
-                            @else
-                                <flux:button wire:click="openOnHoldModal" variant="outline" size="sm">
-                                    <flux:icon.pause class="w-3 h-3 mr-1" />
-                                    Hold
-                                </flux:button>
-                            @endif
-
-                            @if($ticket->status === 'closed')
-                                <flux:button variant="primary" size="sm" disabled>
-                                    <flux:icon.x-circle class="w-3 h-3 mr-1" />
-                                    Close
-                                </flux:button>
-                            @else
-                                <flux:button wire:click="confirmStatusChange('closed')" variant="outline" size="sm">
-                                    <flux:icon.x-circle class="w-3 h-3 mr-1" />
-                                    Close
-                                </flux:button>
-                            @endif
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <span class="text-xs text-gray-500 whitespace-nowrap">Status:</span>
+                            <flux:select
+                                wire:model.live="pendingStatusChange"
+                                variant="listbox"
+                                size="sm"
+                                class="min-w-32"
+                            >
+                                <flux:select.option value="open">
+                                    <div class="flex items-center gap-2">
+                                        <flux:icon.check-circle class="w-3 h-3 text-green-500" />
+                                        Open
+                                    </div>
+                                </flux:select.option>
+                                <flux:select.option value="awaiting_customer">
+                                    <div class="flex items-center gap-2">
+                                        <flux:icon.clock class="w-3 h-3 text-amber-500" />
+                                        Awaiting Customer
+                                    </div>
+                                </flux:select.option>
+                                <flux:select.option value="on_hold">
+                                    <div class="flex items-center gap-2">
+                                        <flux:icon.pause class="w-3 h-3 text-gray-500" />
+                                        On Hold
+                                    </div>
+                                </flux:select.option>
+                                <flux:select.option value="closed">
+                                    <div class="flex items-center gap-2">
+                                        <flux:icon.x-circle class="w-3 h-3 text-red-500" />
+                                        Closed
+                                    </div>
+                                </flux:select.option>
+                            </flux:select>
                         </div>
 
                         <!-- Team Assignment -->
-                        <div class="flex items-center gap-2">
-                            @if($ticket->assignedTeam)
-                                <div class="flex items-center gap-1 px-2 py-1 bg-blue-50 rounded text-xs">
-                                    <flux:icon.user-group class="w-3 h-3 text-blue-600" />
-                                    <span class="text-blue-900">{{ $ticket->assignedTeam->name }}</span>
-                                    <flux:button wire:click="confirmUnassignTeam" variant="ghost" size="sm" class="p-0">
-                                        <flux:icon.x-mark class="w-3 h-3" />
-                                    </flux:button>
-                                </div>
-                            @else
-                                <span class="text-xs text-gray-500">No team</span>
-                            @endif
-                            <flux:button wire:click="openAssignTeamModal" variant="outline" size="sm">
-                                <flux:icon.user-group class="w-3 h-3 mr-1" />
-                                {{ $ticket->assignedTeam ? 'Reassign' : 'Assign' }} Team
-                            </flux:button>
-                        </div>
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                        <flux:input.group>
+                            <flux:input.group.prefix class="font-bold">Team</flux:input.group.prefix>
+                            <flux:select
+                                wire:model.live="pendingTeamId"
+                                variant="listbox"
+                                searchable
+                                clearable
+                                placeholder="Assign team..."
+                                size="sm"
+                                class="min-w-36"
+                            >
+                                @foreach($this->teams as $team)
+                                    <flux:select.option value="{{ $team->id }}">
+                                        <div class="flex items-center gap-2">
+                                            @if($team->color)
+                                                <flux:badge variant="solid" color="{{ $team->color }}" class="w-3 h-3 p-0"></flux:badge>
+                                            @else
+                                                <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
+                                            @endif
+                                            {{ $team->name }}
+                                        </div>
+                                    </flux:select.option>
+                                @endforeach
+                            </flux:select>
+    </flux:input.group>
 
-                        <!-- User Assignment -->
-                        <div class="flex items-center gap-2">
-                            @if($ticket->assignedUser)
-                                <div class="flex items-center gap-1 px-2 py-1 bg-green-50 rounded text-xs">
-                                    <flux:icon.user class="w-3 h-3 text-green-600" />
-                                    <span class="text-green-900">{{ $ticket->assignedUser->name }}</span>
-                                    <flux:button wire:click="confirmUnassignUser" variant="ghost" size="sm" class="p-0">
-                                        <flux:icon.x-mark class="w-3 h-3" />
-                                    </flux:button>
-                                </div>
-                            @else
-                                <span class="text-xs text-gray-500">No user</span>
-                            @endif
-                            <flux:button wire:click="openAssignUserModal" variant="outline" size="sm">
-                                <flux:icon.user class="w-3 h-3 mr-1" />
-                                {{ $ticket->assignedUser ? 'Reassign' : 'Assign' }} User
-                            </flux:button>
+
+                        <flux:input.group>
+                        <flux:input.group.prefix class="font-bold">User</flux:input.group.prefix>
+                            <flux:select
+                                wire:model.live="pendingUserId"
+                                variant="listbox"
+                                searchable
+                                clearable
+                                placeholder="Assign user..."
+                                size="sm"
+                                class="min-w-36"
+                            >
+                                @foreach($this->users as $user)
+                                    <flux:select.option value="{{ $user->id }}">
+                                        <div class="flex items-center gap-2">
+                                            <flux:icon.user class="w-3 h-3 text-gray-400" />
+                                            {{ $user->name }}
+                                        </div>
+                                    </flux:select.option>
+                                @endforeach
+                            </flux:select>
+                            </flux:input.group>
+
                         </div>
                     </div>
                 </div>
@@ -262,8 +262,13 @@
                                             </div>
                                         @elseif($message->message_type === 'internal')
                                             <!-- Internal Message -->
-                                            <div class="flex justify-end">
+                                            <div class="flex justify-start">
                                                 <div class="flex items-start gap-3 max-w-xs lg:max-w-md">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-xs font-medium text-white">
+                                                            {{ strtoupper($message->user->initials()) }}
+                                                        </div>
+                                                    </div>
                                                     <div class="flex-1">
                                                         <div class="px-2 py-1">
                                                             <div class="flex items-center gap-2 mb-1">
@@ -275,18 +280,18 @@
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div class="flex-shrink-0">
-                                                        <div class="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-xs font-medium text-white">
-                                                            {{ strtoupper($message->user->initials()) }}
-                                                        </div>
-                                                    </div>
                                                 </div>
                                             </div>
                                         @endif
                                     @elseif($item->type === 'internal_group')
                                         <!-- Grouped Internal Messages -->
-                                        <div class="flex justify-end">
+                                        <div class="flex justify-start">
                                             <div class="flex items-start gap-3 max-w-xs lg:max-w-md">
+                                                <div class="flex-shrink-0">
+                                                    <div class="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-xs font-medium text-white">
+                                                        {{ strtoupper($item->user->initials()) }}
+                                                    </div>
+                                                </div>
                                                 <div class="flex-1">
                                                     <div class="px-2 py-1">
                                                         <!-- User name header -->
@@ -302,11 +307,6 @@
                                                                 </div>
                                                             @endforeach
                                                         </div>
-                                                    </div>
-                                                </div>
-                                                <div class="flex-shrink-0">
-                                                    <div class="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-xs font-medium text-white">
-                                                        {{ strtoupper($item->user->initials()) }}
                                                     </div>
                                                 </div>
                                             </div>
@@ -591,21 +591,21 @@
     </flux:modal>
 
     <!-- Unassign Confirmation Modals -->
-    <flux:modal wire:model.self="showUnassignTeamModal" variant="flyout" class="md:w-96">
+    <flux:modal wire:model.self="showUnassignTeamModal" class="md:w-96">
         <div class="space-y-6">
             <div>
-                <flux:heading size="lg">Unassign Team</flux:heading>
-                <flux:subheading>Are you sure you want to unassign this ticket from the "{{ $ticket->assignedTeam?->name }}" team?</flux:subheading>
+                <flux:heading size="lg">Remove Team Assignment</flux:heading>
+                <flux:subheading>Are you sure you want to remove the team assignment from this ticket? The ticket will no longer be assigned to the "{{ $ticket->assignedTeam?->name }}" team.</flux:subheading>
             </div>
 
             <div class="flex gap-2 justify-end">
                 <flux:button wire:click="closeUnassignTeamModal" variant="ghost">Cancel</flux:button>
-                <flux:button wire:click="unassignTeam" variant="primary">Unassign Team</flux:button>
+                <flux:button wire:click="unassignTeam" variant="primary">Remove Assignment</flux:button>
             </div>
         </div>
     </flux:modal>
 
-    <flux:modal wire:model.self="showUnassignUserModal" variant="flyout" class="md:w-96">
+    <flux:modal wire:model.self="showUnassignUserModal" class="md:w-96">
         <div class="space-y-6">
             <div>
                 <flux:heading size="lg">Unassign User</flux:heading>
@@ -615,6 +615,75 @@
             <div class="flex gap-2 justify-end">
                 <flux:button wire:click="closeUnassignUserModal" variant="ghost">Cancel</flux:button>
                 <flux:button wire:click="unassignUser" variant="primary">Unassign User</flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    <!-- Assignment Confirmation Modals -->
+    <flux:modal wire:model.self="showConfirmTeamAssignModal" class="md:w-96">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">
+                    @if($ticket->assignedTeam && $assignToTeam && $assignToTeam != $ticket->assigned_team_id)
+                        Reassign Team
+                    @else
+                        Assign Team
+                    @endif
+                </flux:heading>
+                <flux:subheading>
+                    @if($ticket->assignedTeam && $assignToTeam && $assignToTeam != $ticket->assigned_team_id)
+                        @php $newTeam = $this->teams->firstWhere('id', $assignToTeam); @endphp
+                        Reassign this ticket from "{{ $ticket->assignedTeam->name }}" to "{{ $newTeam?->name }}"?
+                    @elseif($assignToTeam)
+                        @php $newTeam = $this->teams->firstWhere('id', $assignToTeam); @endphp
+                        Assign this ticket to "{{ $newTeam?->name }}"?
+                    @endif
+                </flux:subheading>
+            </div>
+
+            <div class="flex gap-2 justify-end">
+                <flux:button wire:click="closeConfirmTeamAssignModal" variant="ghost">Cancel</flux:button>
+                <flux:button wire:click="executeTeamAssignment" variant="primary">
+                    @if($ticket->assignedTeam && $assignToTeam && $assignToTeam != $ticket->assigned_team_id)
+                        Reassign Team
+                    @else
+                        Assign Team
+                    @endif
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    <flux:modal wire:model.self="showConfirmUserAssignModal" class="md:w-96">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">
+                    @if($ticket->assignedUser && $assignToUser && $assignToUser != $ticket->assigned_user_id)
+                        Reassign User
+                    @else
+                        Assign User
+                    @endif
+                </flux:heading>
+                <flux:subheading>
+                    @if($ticket->assignedUser && $assignToUser && $assignToUser != $ticket->assigned_user_id)
+                        @php $newUser = $this->users->firstWhere('id', $assignToUser); @endphp
+                        Reassign this ticket from "{{ $ticket->assignedUser->name }}" to "{{ $newUser?->name }}"?
+                    @elseif($assignToUser)
+                        @php $newUser = $this->users->firstWhere('id', $assignToUser); @endphp
+                        Assign this ticket to "{{ $newUser?->name }}"?
+                    @endif
+                </flux:subheading>
+            </div>
+
+            <div class="flex gap-2 justify-end">
+                <flux:button wire:click="closeConfirmUserAssignModal" variant="ghost">Cancel</flux:button>
+                <flux:button wire:click="executeUserAssignment" variant="primary">
+                    @if($ticket->assignedUser && $assignToUser && $assignToUser != $ticket->assigned_user_id)
+                        Reassign User
+                    @else
+                        Assign User
+                    @endif
+                </flux:button>
             </div>
         </div>
     </flux:modal>
