@@ -6,9 +6,12 @@
 
     <flux:navlist variant="outline">
         <flux:navlist.item icon="home" :href="$company ? route('company.dashboard', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
-        <flux:navlist.item icon="chat-bubble-left-right" :href="$company ? route('company.tickets', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.tickets')" wire:navigate>{{ __('Tickets') }}</flux:navlist.item>
-        <flux:navlist.item icon="document-text" :href="$company ? route('company.agreements', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.agreements')" wire:navigate>{{ __('Agreements') }}</flux:navlist.item>
         <flux:navlist.item icon="chart-bar" :href="$company ? route('company.monitoring', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.monitoring')" wire:navigate>{{ __('Monitoring') }}</flux:navlist.item>
+
+        <flux:navlist.group :heading="__('Support')" class="grid">
+            <flux:navlist.item icon="chat-bubble-left-right" :href="$company ? route('company.tickets', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.tickets*')" wire:navigate>{{ __('Tickets') }}</flux:navlist.item>
+            <flux:navlist.item icon="document-text" :href="$company ? route('company.agreements', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.agreements')" wire:navigate>{{ __('Agreements') }}</flux:navlist.item>
+        </flux:navlist.group>
 
         <flux:navlist.group :heading="__('Company')" class="grid">
             <flux:navlist.item icon="users" :href="$company ? route('company.contacts', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.contacts') || request()->routeIs('company.contact-groups')" wire:navigate>{{ __('Contacts') }}</flux:navlist.item>
@@ -36,7 +39,7 @@
         <flux:profile
             :name="auth()->user()->name"
             :initials="auth()->user()->initials()"
-            icon:trailing="chevrons-up-down"
+            icon:trailing="chevron-up-down"
         />
 
         <flux:menu class="w-[220px]">

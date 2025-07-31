@@ -187,7 +187,7 @@ new class extends Component {
                                             </p>
                                             @if($device->last_seen)
                                                 <p class="text-xs text-gray-400 dark:text-gray-500">
-                                                    Last seen: {{ $device->last_seen->diffForHumans() }}
+                                                    Last seen: @preciseTimeAgo($device->last_seen)
                                                 </p>
                                             @endif
                                         </div>
@@ -283,7 +283,7 @@ new class extends Component {
                                             </p>
                                             @if($session->last_seen)
                                                 <p class="text-xs text-gray-400 dark:text-gray-500">
-                                                    Last seen: {{ $session->last_seen->diffForHumans() }}
+                                                    Last seen: @preciseTimeAgo($session->last_seen)
                                                 </p>
                                             @endif
                                         </div>

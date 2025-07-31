@@ -3,23 +3,17 @@
     $routeName = $route->getName();
     $segments = [];
 
-    // Start with home
-    $segments[] = [
-        'url' => route('app.index'),
-        'label' => null,
-        'icon' => 'home'
-    ];
-
     // Determine context and build breadcrumbs
     if (str_starts_with($routeName, 'company.')) {
         $company = $route->parameter('company');
         if ($company) {
-            // Add header view selector instead of company name
+
+
+            // Then add home
             $segments[] = [
-                'url' => null,
+                'url' => route('app.index'),
                 'label' => null,
-                'icon' => null,
-                'component' => 'header_view_selector'
+                'icon' => 'home'
             ];
 
             // Add current page
@@ -70,37 +64,75 @@
     } elseif (str_starts_with($routeName, 'site.')) {
         $site = $route->parameter('site');
         if ($site) {
-            // Add header view selector instead of site name
+
+            // Then add home
             $segments[] = [
-                'url' => null,
+                'url' => route('app.index'),
                 'label' => null,
-                'icon' => null,
-                'component' => 'header_view_selector'
+                'icon' => 'home'
             ];
 
-            // Add current page
-            $pageLabel = match($routeName) {
-                'site.dashboard' => 'Dashboard',
-                'site.ticket' => 'Support',
-                'site.appointments' => 'Appointments',
-                'site.quotations' => 'Quotations',
-                'site.maintenance' => 'Maintenance',
-                'site.monitoring' => 'Monitoring',
-                'site.passwords' => 'Passwords',
-                'site.internet' => 'Internet',
-                'site.agreement' => 'Agreement',
-                'site.users' => 'Users',
-                'site.settings' => 'Settings',
-                default => 'Page'
-            };
+            // Handle special cases for ticket routes
+            if ($routeName === 'site.tickets.view') {
+                // For individual ticket view: Show Support -> Ticket Number
+                $segments[] = [
+                    'url' => route('site.tickets', $site),
+                    'label' => 'Support',
+                    'icon' => null
+                ];
 
-            if ($routeName !== 'site.dashboard') {
-                $segments[] = ['url' => null, 'label' => $pageLabel, 'icon' => null];
+                $ticketId = $route->parameter('ticketId');
+                // Try to get the actual ticket number
+                try {
+                    $ticket = \App\Models\Ticket::find($ticketId);
+                    $ticketLabel = $ticket ? $ticket->ticket_number : "Ticket #{$ticketId}";
+                } catch (\Exception $e) {
+                    $ticketLabel = "Ticket #{$ticketId}";
+                }
+
+                $segments[] = [
+                    'url' => null,
+                    'label' => $ticketLabel,
+                    'icon' => null
+                ];
+            } else {
+                // Add current page for other routes
+                $pageLabel = match($routeName) {
+                    'site.dashboard' => 'Dashboard',
+                    'site.tickets' => 'Support',
+                    'site.appointments' => 'Appointments',
+                    'site.quotations' => 'Quotations',
+                    'site.maintenance' => 'Maintenance',
+                    'site.monitoring' => 'Monitoring',
+                    'site.passwords' => 'Passwords',
+                    'site.internet' => 'Internet',
+                    'site.agreement' => 'Agreement',
+                    'site.users' => 'Users',
+                    'site.settings' => 'Settings',
+                    default => 'Page'
+                };
+
+                if ($routeName !== 'site.dashboard') {
+                    $segments[] = ['url' => null, 'label' => $pageLabel, 'icon' => null];
+                }
             }
         }
     } elseif ($routeName === 'view.select') {
+        // Add home first for view select
+        $segments[] = [
+            'url' => route('app.index'),
+            'label' => null,
+            'icon' => 'home'
+        ];
         $segments[] = ['url' => null, 'label' => 'Select View', 'icon' => null];
     } elseif (str_starts_with($routeName, 'settings.')) {
+        // Add home first for settings
+        $segments[] = [
+            'url' => route('app.index'),
+            'label' => null,
+            'icon' => 'home'
+        ];
+
         $segments[] = [
             'url' => route('settings.profile'),
             'label' => 'Settings',
@@ -118,16 +150,21 @@
         if ($routeName !== 'settings.profile') {
             $segments[] = ['url' => null, 'label' => $pageLabel, 'icon' => null];
         }
+    } else {
+        // Default: just home
+        $segments[] = [
+            'url' => route('app.index'),
+            'label' => null,
+            'icon' => 'home'
+        ];
     }
 @endphp
 
+<livewire:header-view-selector />
+
 <flux:breadcrumbs>
     @foreach($segments as $index => $segment)
-        @if(isset($segment['component']) && $segment['component'] === 'header_view_selector')
-            <flux:breadcrumbs.item separator="slash">
-                <livewire:header-view-selector />
-            </flux:breadcrumbs.item>
-        @elseif($segment['icon'])
+        @if($segment['icon'])
             <flux:breadcrumbs.item
                 :href="$segment['url']"
                 icon="{{ $segment['icon'] }}"

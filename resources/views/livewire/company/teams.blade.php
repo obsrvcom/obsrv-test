@@ -57,7 +57,12 @@
                                         <flux:badge variant="solid" color="{{ $team->color }}" class="w-4 h-4 p-0"></flux:badge>
                                     </div>
                                     <div>
-                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $team->name }}</h3>
+                                        <div class="flex items-center gap-2">
+                                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $team->name }}</h3>
+                                            @if($team->allow_direct_tickets)
+                                                <flux:badge variant="solid" color="green" size="sm">Direct Tickets</flux:badge>
+                                            @endif
+                                        </div>
                                         <p class="text-xs text-gray-400 mt-2">{{ $team->users->count() }} member{{ $team->users->count() !== 1 ? 's' : '' }}</p>
                                     </div>
                                 </div>
@@ -152,6 +157,13 @@
                     @enderror
                 </div>
 
+                <div>
+                    <flux:checkbox wire:model="allowDirectTickets" label="Allow Direct Ticket Creation" />
+                    <flux:text size="sm" class="mt-1 text-gray-600">
+                        Allow customers to create tickets directly to this team when opening support requests.
+                    </flux:text>
+                </div>
+
                 <div class="flex">
                     <flux:spacer />
                     <flux:button variant="ghost" type="button" wire:click="closeCreateTeamModal">Cancel</flux:button>
@@ -184,6 +196,13 @@
                     @error('editTeamColor')
                         <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
                     @enderror
+                </div>
+
+                <div>
+                    <flux:checkbox wire:model="editAllowDirectTickets" label="Allow Direct Ticket Creation" />
+                    <flux:text size="sm" class="mt-1 text-gray-600">
+                        Allow customers to create tickets directly to this team when opening support requests.
+                    </flux:text>
                 </div>
 
                 <div class="flex">

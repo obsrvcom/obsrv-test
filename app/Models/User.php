@@ -115,6 +115,26 @@ class User extends Authenticatable
         return $this->belongsToMany(Team::class)->withTimestamps();
     }
 
+    public function createdTickets()
+    {
+        return $this->hasMany(Ticket::class, 'created_by_user_id');
+    }
+
+    public function assignedTickets()
+    {
+        return $this->hasMany(Ticket::class, 'assigned_user_id');
+    }
+
+    public function ticketMessages()
+    {
+        return $this->hasMany(TicketMessage::class);
+    }
+
+    public function ticketActivities()
+    {
+        return $this->hasMany(TicketActivity::class);
+    }
+
     public function siteChats()
     {
         return $this->hasMany(\App\Models\SiteChat::class);

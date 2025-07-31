@@ -12,7 +12,7 @@
 
     <flux:navlist variant="outline">
         <flux:navlist.item icon="home" :href="route('site.dashboard', ['site' => $siteId])" :current="request()->routeIs('site.dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
-        <flux:navlist.item icon="chat-bubble-left-ellipsis" :href="route('site.ticket', ['site' => $siteId])" :current="request()->routeIs('site.ticket')" wire:navigate>{{ __('Support') }}</flux:navlist.item>
+        <flux:navlist.item icon="chat-bubble-left-ellipsis" :href="route('site.tickets', ['site' => $siteId])" :current="request()->routeIs('site.tickets*')" wire:navigate>{{ __('Support') }}</flux:navlist.item>
         <flux:navlist.item icon="calendar-days" :href="route('site.appointments', ['site' => $siteId])" :current="request()->routeIs('site.appointments')" wire:navigate>{{ __('Appointments') }}</flux:navlist.item>
         <flux:navlist.item icon="document-text" :href="route('site.quotations', ['site' => $siteId])" :current="request()->routeIs('site.quotations')" wire:navigate>{{ __('Quotations') }}</flux:navlist.item>
         <flux:navlist.item icon="wrench-screwdriver" :href="route('site.maintenance', ['site' => $siteId])" :current="request()->routeIs('site.maintenance')" wire:navigate>{{ __('Maintenance') }}</flux:navlist.item>
@@ -36,7 +36,7 @@
         <flux:profile
             :name="auth()->user()->name"
             :initials="auth()->user()->initials()"
-            icon:trailing="chevrons-up-down"
+            icon:trailing="chevron-up-down"
         />
 
         <flux:menu class="w-[220px]">

@@ -45,6 +45,11 @@ class Company extends Model
         return $this->hasMany(Team::class);
     }
 
+    public function tickets()
+    {
+        return $this->hasManyThrough(Ticket::class, Site::class);
+    }
+
     public function hasUser(User $user)
     {
         return $this->users()->where('user_id', $user->id)->exists();

@@ -29,6 +29,7 @@
     }
 @endphp
 
+<div class="pr-4">
 <flux:dropdown>
     @if($avatarSrc)
         <flux:profile
@@ -114,4 +115,5 @@
         </flux:navmenu.item>
     </flux:navmenu>
 </flux:dropdown>
+</div>
 

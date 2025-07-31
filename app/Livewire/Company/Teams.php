@@ -14,11 +14,13 @@ class Teams extends Component
     // Team management properties
     public $teamName = '';
     public $teamColor = 'blue';
+    public $allowDirectTickets = false;
     public $showCreateTeamModal = false;
     public $showEditTeamModal = false;
     public $editingTeam = null;
     public $editTeamName = '';
     public $editTeamColor = 'blue';
+    public $editAllowDirectTickets = false;
     public $showDeleteTeamModal = false;
     public $teamIdToDelete = null;
     public $showAddToTeamModal = false;
@@ -35,8 +37,10 @@ class Teams extends Component
     protected $rules = [
         'teamName' => 'required|string|max:255',
         'teamColor' => 'required|string|in:red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose',
+        'allowDirectTickets' => 'boolean',
         'editTeamName' => 'required|string|max:255',
         'editTeamColor' => 'required|string|in:red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose',
+        'editAllowDirectTickets' => 'boolean',
     ];
 
     public function mount($company = null)
@@ -58,8 +62,9 @@ class Teams extends Component
     // Team management methods
     public function openCreateTeamModal()
     {
-        $this->reset(['teamName']);
+        $this->reset(['teamName', 'allowDirectTickets']);
         $this->teamColor = $this->getNextAvailableColor();
+        $this->allowDirectTickets = false;
         $this->showCreateTeamModal = true;
     }
 
@@ -105,6 +110,7 @@ class Teams extends Component
                 'unique:teams,name,NULL,id,company_id,' . $this->company->id
             ],
             'teamColor' => 'required|string|in:red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose',
+            'allowDirectTickets' => 'boolean',
         ], [
             'teamName.unique' => 'A team with this name already exists in your company.',
         ]);
@@ -112,6 +118,7 @@ class Teams extends Component
         Team::create([
             'name' => $this->teamName,
             'color' => $this->teamColor,
+            'allow_direct_tickets' => $this->allowDirectTickets,
             'company_id' => $this->company->id,
         ]);
 
@@ -125,6 +132,7 @@ class Teams extends Component
         if ($this->editingTeam) {
             $this->editTeamName = $this->editingTeam->name;
             $this->editTeamColor = $this->editingTeam->color ?? 'blue';
+            $this->editAllowDirectTickets = $this->editingTeam->allow_direct_tickets ?? false;
             $this->showEditTeamModal = true;
         }
     }
@@ -133,7 +141,7 @@ class Teams extends Component
     {
         $this->showEditTeamModal = false;
         $this->editingTeam = null;
-        $this->reset(['editTeamName', 'editTeamColor']);
+        $this->reset(['editTeamName', 'editTeamColor', 'editAllowDirectTickets']);
     }
 
     public function updateTeam()
@@ -146,6 +154,7 @@ class Teams extends Component
                 'unique:teams,name,' . $this->editingTeam->id . ',id,company_id,' . $this->company->id
             ],
             'editTeamColor' => 'required|string|in:red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose',
+            'editAllowDirectTickets' => 'boolean',
         ], [
             'editTeamName.unique' => 'A team with this name already exists in your company.',
         ]);
@@ -154,6 +163,7 @@ class Teams extends Component
             $this->editingTeam->update([
                 'name' => $this->editTeamName,
                 'color' => $this->editTeamColor,
+                'allow_direct_tickets' => $this->editAllowDirectTickets,
             ]);
 
             $this->closeEditTeamModal();

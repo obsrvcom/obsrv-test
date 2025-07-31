@@ -25,6 +25,11 @@ class Site extends Model
         return $this->belongsToMany(User::class)->withTimestamps();
     }
 
+    public function tickets()
+    {
+        return $this->hasMany(Ticket::class);
+    }
+
     public function siteChats()
     {
         return $this->hasMany(SiteChat::class)->orderBy('created_at', 'desc');

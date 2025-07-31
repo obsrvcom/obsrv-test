@@ -11,6 +11,10 @@ use App\Livewire\Site\Internet;
 use App\Livewire\Site\Agreement;
 use App\Livewire\Site\Users;
 use App\Livewire\Site\Settings;
+use App\Livewire\Site\Tickets as SiteTickets;
+use App\Livewire\Site\TicketView as SiteTicketView;
+use App\Livewire\Company\Tickets as CompanyTickets;
+use App\Livewire\Company\TicketView as CompanyTicketView;
 use App\Livewire\Company\Users as CompanyUsers;
 use App\Livewire\Company\Sites as CompanySites;
 use App\Livewire\Company\SiteGroups as CompanySiteGroups;
@@ -69,8 +73,8 @@ Route::prefix('app')->middleware(['auth'])->group(function () {
     Route::middleware(['auth', 'company.access'])->prefix('company/{company}')->name('company.')->group(function () {
         Route::redirect('/', '/app/company/{company}/dashboard'); // Redirect base to dashboard
         Volt::route('dashboard', 'app.company.dashboard')->name('dashboard');
-        Volt::route('tickets', 'app.company.tickets')->name('tickets');
-        Route::get('tickets/{site}', \App\Livewire\Company\TicketChat::class)->name('tickets.site');
+        Route::get('tickets', CompanyTickets::class)->name('tickets');
+        Route::get('tickets/{ticket}', CompanyTicketView::class)->name('tickets.view');
         Volt::route('agreements', 'app.company.agreements')->name('agreements');
         Route::get('contacts', \App\Livewire\Company\Contacts::class)->name('contacts');
         Route::get('contact-groups', \App\Livewire\Company\ContactGroups::class)->name('contact-groups');
@@ -93,7 +97,8 @@ Route::prefix('app')->middleware(['auth'])->group(function () {
     Route::prefix('site/{site}')->middleware(['site.access'])->group(function () {
         Route::redirect('/', '/app/site/{site}/dashboard'); // Redirect base to dashboard
         Route::view('dashboard', 'site.dashboard')->name('site.dashboard');
-        Route::view('ticket', 'site.ticket')->name('site.ticket');
+        Route::get('tickets', SiteTickets::class)->name('site.tickets');
+        Route::get('tickets/{ticketId}', SiteTicketView::class)->name('site.tickets.view');
         Route::get('appointments', Appointments::class)->name('site.appointments');
         Route::get('quotations', Quotations::class)->name('site.quotations');
         Route::get('maintenance', Maintenance::class)->name('site.maintenance');
