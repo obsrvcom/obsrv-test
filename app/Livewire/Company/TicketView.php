@@ -11,6 +11,7 @@ use App\Models\TicketDraft;
 use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Renderless;
 
 class TicketView extends Component
 {
@@ -22,6 +23,7 @@ class TicketView extends Component
     public $isLoadingInternal = false;
     public $messageType = 'internal'; // Default to internal messages
     public $filters = []; // Filters for timeline: customer_chat, internal_chat, activity_updates
+    public $onlineUsers = []; // Users currently viewing this ticket
 
     // Modal states
     public $showChangeSiteModal = false;
@@ -49,9 +51,10 @@ class TicketView extends Component
     protected $listeners = [
         'messageAdded' => '$refresh',
         'ticketUpdated' => '$refresh',
+        'updateOnlineUsers' => 'setOnlineUsers',
     ];
 
-    public function getListeners()
+            public function getListeners()
     {
         $listeners = $this->listeners;
 
@@ -63,6 +66,17 @@ class TicketView extends Component
         return $listeners;
     }
 
+    public function setOnlineUsers($users)
+    {
+        $this->onlineUsers = is_array($users) ? $users : [];
+    }
+
+    public function debugOnlineUsers()
+    {
+        \Log::info('Debug onlineUsers', ['data' => $this->onlineUsers]);
+        $this->dispatch('debug-console', ['data' => $this->onlineUsers]);
+    }
+
     public function handleTicketUpdate()
     {
         \Log::info('Company view received ticket update', ['ticket_id' => $this->ticket->id]);
@@ -72,6 +86,9 @@ class TicketView extends Component
 
     public function mount($company = null, $ticket = null)
     {
+        // Initialize online users array
+        $this->onlineUsers = [];
+
         // Handle route model binding
         if ($company instanceof Company) {
             $this->company = $company;
@@ -114,6 +131,8 @@ class TicketView extends Component
         if ($existingDraft) {
             $this->customerMessage = $existingDraft->content;
         }
+
+
     }
 
     public function getCombinedTimelineProperty()
@@ -367,6 +386,7 @@ class TicketView extends Component
             ->get();
     }
 
+    #[Renderless]
     public function sendCustomerMessage()
     {
         $this->validate([
@@ -386,10 +406,9 @@ class TicketView extends Component
             $this->clearDraft('customer');
 
             $this->customerMessage = '';
-            $this->dispatch('messageAdded');
             $this->dispatch('scrollToBottom');
 
-            // Also broadcast for real-time updates
+            // Broadcast for real-time updates to all listeners (including sender)
             broadcast(new \App\Events\TicketUpdated($this->ticket));
 
         } catch (\Exception $e) {
@@ -464,6 +483,8 @@ class TicketView extends Component
         $this->closeChangeSiteModal();
         $this->dispatch('messageAdded');
     }
+
+
 
     // Status Change Methods
     public function confirmStatusChange($status)
@@ -826,6 +847,8 @@ class TicketView extends Component
         $this->pendingUserId = $this->ticket->assigned_user_id;
         $this->assignToUser = $this->ticket->assigned_user_id;
     }
+
+
 
     #[Layout('components.layouts.company')]
     public function render()

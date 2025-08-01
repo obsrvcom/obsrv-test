@@ -1,4 +1,57 @@
-<div class="grow flex flex-col">
+<div class="grow flex flex-col" x-data="{
+    presenceChannel: null,
+        init() {
+        if (window.Echo) {
+            const channelName = 'ticket-presence.{{ $ticket->id }}';
+
+            try {
+                this.presenceChannel = window.Echo.join(channelName)
+                .here((users) => {
+                    this.$wire.call('setOnlineUsers', users);
+                })
+                .joining((user) => {
+                    // Immediately add the new user to the current list
+                    const currentUsers = this.$wire.get('onlineUsers') || [];
+                    if (!currentUsers.find(u => u.id === user.id)) {
+                        const updatedUsers = [...currentUsers, user];
+                        this.$wire.call('setOnlineUsers', updatedUsers);
+                    }
+                })
+                .leaving((user) => {
+                    // Delay to allow any open popovers to close before DOM update
+                    setTimeout(() => {
+                        const currentUsers = this.$wire.get('onlineUsers') || [];
+                        const updatedUsers = currentUsers.filter(u => u.id !== user.id);
+                        this.$wire.call('setOnlineUsers', updatedUsers);
+                    }, 250);
+                })
+                .error((error) => {
+                    console.error('❌ Presence channel error:', error);
+                });
+            } catch (error) {
+                console.error('❌ Failed to join presence channel:', error);
+            }
+        } else {
+            console.error('❌ Echo is not available');
+        }
+
+        // Listen for debug events
+        this.$wire.on('debug-console', (event) => {
+            console.log('🐛 Debug onlineUsers:', event.data);
+        });
+    },
+    destroy() {
+        // Clean up presence channel
+        if (this.presenceChannel) {
+            this.presenceChannel.leave();
+        }
+
+        // Clean up regular ticket channel
+        if (window.Echo) {
+            window.Echo.leaveChannel('private-ticket.{{ $ticket->id }}');
+        }
+    }
+}">
     <!-- Header -->
 
     @if(session('error'))
@@ -32,6 +85,84 @@
                         <span>@preciseTimeAgo($ticket->created_at)</span>
                     </div>
                 </div>
+            </div>
+
+            <!-- Online Users Display -->
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-gray-500">Viewing: ({{ count($onlineUsers) }})</span>
+                                @if(app()->environment('local'))
+                    <button wire:click="debugOnlineUsers"
+                            class="text-xs bg-red-100 text-red-600 px-1 rounded">Debug</button>
+                @endif
+                                                                              @if(count($onlineUsers) > 0)
+                    <flux:avatar.group wire:key="online-users-{{ count($onlineUsers) }}">
+                        @foreach(array_slice($onlineUsers, 0, 5) as $index => $user)
+                            @if(is_array($user) && isset($user['type'], $user['name'], $user['initials']))
+                                <flux:dropdown hover position="bottom" wire:key="user-dropdown-{{ $user['id'] }}">
+                                    <flux:avatar
+                                        as="button"
+                                        size="sm"
+                                        circle
+                                        name="{{ $user['name'] }}"
+                                        initials="{{ $user['initials'] }}"
+                                        color="{{ $user['type'] === 'company' ? 'blue' : 'green' }}"
+                                    />
+                                    <flux:popover class="w-64">
+                                        <div class="space-y-3">
+                                            <div class="flex items-start gap-3">
+                                                <flux:avatar
+                                                    size="lg"
+                                                    circle
+                                                    name="{{ $user['name'] }}"
+                                                    initials="{{ $user['initials'] }}"
+                                                    color="{{ $user['type'] === 'company' ? 'blue' : 'green' }}"
+                                                />
+                                                <div class="flex-1 min-w-0">
+                                                    <flux:heading size="sm">{{ $user['name'] }}</flux:heading>
+                                                    @if($user['type'] === 'company' && !empty($user['job_title']))
+                                                        <flux:text class="text-xs text-gray-600">{{ $user['job_title'] }}</flux:text>
+                                                    @endif
+                                                    <flux:text class="text-xs">{{ $user['email'] }}</flux:text>
+                                                    <flux:badge
+                                                        size="sm"
+                                                        color="{{ $user['type'] === 'company' ? 'blue' : 'green' }}"
+                                                        class="mt-1"
+                                                    >
+                                                        {{ ucfirst($user['type']) }}
+                                                    </flux:badge>
+                                                </div>
+                                            </div>
+                                            <flux:text class="text-xs text-gray-500">
+                                                Currently viewing this ticket
+                                            </flux:text>
+                                        </div>
+                                    </flux:popover>
+                                </flux:dropdown>
+                            @else
+                                <!-- Debug: show invalid user data -->
+                                <flux:avatar
+                                    size="sm"
+                                    circle
+                                    color="red"
+                                    initials="?"
+                                    tooltip="Invalid user data"
+                                    wire:key="invalid-{{ $index }}"
+                                />
+                            @endif
+                        @endforeach
+                        @if(count($onlineUsers) > 5)
+                            <flux:avatar
+                                size="sm"
+                                circle
+                                color="zinc"
+                                tooltip="{{ count($onlineUsers) - 5 }} more users viewing"
+                                wire:key="overflow-count"
+                            >
+                                +{{ count($onlineUsers) - 5 }}
+                            </flux:avatar>
+                        @endif
+                    </flux:avatar.group>
+            @endif
             </div>
         </div>
     </div>
@@ -101,12 +232,13 @@
                             >
                                 @foreach($this->teams as $team)
                                     <flux:select.option value="{{ $team->id }}">
-                                        <div class="flex items-center gap-2">
-                                            @if($team->color)
-                                                <flux:badge variant="solid" color="{{ $team->color }}" class="w-3 h-3 p-0"></flux:badge>
-                                            @else
-                                                <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
-                                            @endif
+                                        <div class="flex items-center gap-2 whitespace-nowrap">
+                                            <flux:avatar
+                                                circle
+                                                size="xs"
+                                                name="{{ $team->name }}"
+                                                color="{{ $team->color ?? 'blue' }}"
+                                            />
                                             {{ $team->name }}
                                         </div>
                                     </flux:select.option>
@@ -126,10 +258,17 @@
                                 size="sm"
                                 class="min-w-36"
                             >
-                                @foreach($this->users as $user)
+                                                                @foreach($this->users as $user)
                                     <flux:select.option value="{{ $user->id }}">
-                                        <div class="flex items-center gap-2">
-                                            <flux:icon.user class="w-3 h-3 text-gray-400" />
+                                        <div class="flex items-center gap-2 whitespace-nowrap">
+                                            <flux:avatar
+                                                circle
+                                                size="xs"
+                                                name="{{ $user->name }}"
+                                                initials="{{ $user->initials() }}"
+                                                color="auto"
+                                                color:seed="{{ $user->id }}"
+                                            />
                                             {{ $user->name }}
                                         </div>
                                     </flux:select.option>
@@ -555,9 +694,24 @@
             </div>
 
             <flux:select wire:model="assignToTeam" label="Select Team" placeholder="Choose a team...">
-                <option value="">No team</option>
+                <flux:select.option value="">
+                    <div class="flex items-center gap-2 whitespace-nowrap">
+                        <flux:icon.x-circle class="w-4 h-4 text-gray-400" />
+                        No team
+                    </div>
+                </flux:select.option>
                 @foreach($this->teams as $team)
-                    <option value="{{ $team->id }}">{{ $team->name }}</option>
+                    <flux:select.option value="{{ $team->id }}">
+                        <div class="flex items-center gap-2 whitespace-nowrap">
+                            <flux:avatar
+                                circle
+                                size="xs"
+                                name="{{ $team->name }}"
+                                color="{{ $team->color ?? 'blue' }}"
+                            />
+                            {{ $team->name }}
+                        </div>
+                    </flux:select.option>
                 @endforeach
             </flux:select>
 
@@ -577,9 +731,31 @@
             </div>
 
             <flux:select wire:model="assignToUser" label="Select User" placeholder="Choose a user...">
-                <option value="">No specific user</option>
+                <flux:select.option value="">
+                    <div class="flex items-center gap-2 whitespace-nowrap">
+                        <flux:icon.user-minus class="w-4 h-4 text-gray-400" />
+                        No specific user
+                    </div>
+                </flux:select.option>
                 @foreach($this->companyUsers as $user)
-                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                    <flux:select.option value="{{ $user->id }}">
+                        <div class="flex items-center gap-2 whitespace-nowrap">
+                            <flux:avatar
+                                circle
+                                size="xs"
+                                name="{{ $user->name }}"
+                                initials="{{ $user->initials() }}"
+                                color="auto"
+                                color:seed="{{ $user->id }}"
+                            />
+                            <div class="flex flex-col min-w-0">
+                                <span class="font-medium">{{ $user->name }}</span>
+                                @if($user->pivot && $user->pivot->job_title)
+                                    <span class="text-xs text-gray-500">{{ $user->pivot->job_title }}</span>
+                                @endif
+                            </div>
+                        </div>
+                    </flux:select.option>
                 @endforeach
             </flux:select>
 
@@ -701,4 +877,6 @@
             }, 100);
         });
     });
+
+
 </script>

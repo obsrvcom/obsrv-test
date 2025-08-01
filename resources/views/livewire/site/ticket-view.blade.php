@@ -1,4 +1,37 @@
-<div class="grow flex flex-col bg-gray-50">
+<div class="grow flex flex-col bg-gray-50" x-data="{
+    presenceChannel: null,
+        init() {
+        // Join presence channel for presence tracking (UI handled by company view)
+        if (window.Echo) {
+            const channelName = 'ticket-presence.{{ $ticket->id }}';
+
+            this.presenceChannel = window.Echo.join(channelName)
+                .here((users) => {
+                    // Site view participates in presence but doesn't display UI
+                })
+                .joining((user) => {
+                    // User joined - company view will handle display updates
+                })
+                .leaving((user) => {
+                    // User left - company view will handle display updates
+                })
+                .error((error) => {
+                    console.error('❌ Presence channel error:', error);
+                });
+        }
+    },
+    destroy() {
+        // Clean up presence channel
+        if (this.presenceChannel) {
+            this.presenceChannel.leave();
+        }
+
+        // Clean up regular ticket channel
+        if (window.Echo) {
+            window.Echo.leaveChannel('private-ticket.{{ $ticket->id }}');
+        }
+    }
+}">
     <!-- Simple header with back button and status -->
     <div class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex-shrink-0">
         <div class="flex items-center justify-between">

@@ -6,6 +6,7 @@ use App\Models\Ticket;
 use App\Models\Site;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Renderless;
 use App\Events\TicketUpdated;
 
 class TicketView extends Component
@@ -19,12 +20,12 @@ class TicketView extends Component
         'ticketUpdated' => 'refreshTicket',
     ];
 
-            public function getListeners()
+                public function getListeners()
     {
         $listeners = $this->listeners;
 
         if ($this->ticket) {
-            $listeners["echo-private:ticket.{$this->ticket->id},.ticket.updated"] = '$refresh';
+            $listeners["echo-private:ticket.{$this->ticket->id},ticket.updated"] = 'handleTicketUpdate';
             \Log::info('Site view listening to channel', ['channel' => "ticket.{$this->ticket->id}"]);
         }
 
@@ -54,6 +55,8 @@ class TicketView extends Component
         if ($this->ticket->site_id !== $this->site->id) {
             abort(403, 'You do not have access to this ticket.');
         }
+
+
     }
 
     public function getMessagesProperty()
@@ -101,6 +104,7 @@ class TicketView extends Component
         ]);
     }
 
+    #[Renderless]
     public function sendMessage()
     {
         $this->validate([
@@ -116,14 +120,7 @@ class TicketView extends Component
 
             $this->newMessage = '';
 
-            // Refresh the ticket model to get updated relationships
-            $this->ticket->refresh();
-            $this->ticket->load(['messages.user', 'activities.user']);
-
-            // Dispatch event to refresh timeline
-            $this->dispatch('messageAdded');
-
-            // Also broadcast for real-time updates
+            // Broadcast for real-time updates to all listeners (including sender)
             broadcast(new TicketUpdated($this->ticket));
 
         } catch (\Exception $e) {
@@ -142,6 +139,8 @@ class TicketView extends Component
     {
         $this->refreshTimeline();
     }
+
+
 
 
 

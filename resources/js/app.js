@@ -14,6 +14,22 @@ if (import.meta.env.VITE_REVERB_APP_KEY) {
         forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
         enabledTransports: ['ws', 'wss'],
     });
+
+    // Handle presence cleanup on navigation for wire:navigate
+    document.addEventListener('livewire:navigating', (event) => {
+        // Find any active presence channels and clean them up
+        if (window.Echo && window.Echo.connector && window.Echo.connector.channels) {
+            const presenceChannels = Object.keys(window.Echo.connector.channels).filter(name =>
+                name.startsWith('presence-ticket-presence.')
+            );
+
+            presenceChannels.forEach(channelName => {
+                console.log('🧹 Cleaning up presence channel on navigation:', channelName);
+                window.Echo.leaveChannel(channelName);
+            });
+        }
+    });
+
 } else {
     // Fallback when broadcasting is not configured
     window.Echo = null;
