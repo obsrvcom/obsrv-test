@@ -11,6 +11,8 @@
         <flux:navlist.group :heading="__('Support')" class="grid">
             <flux:navlist.item icon="chat-bubble-left-right" :href="$company ? route('company.tickets', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.tickets*')" wire:navigate>{{ __('Tickets') }}</flux:navlist.item>
             <flux:navlist.item icon="document-text" :href="$company ? route('company.agreements', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.agreements')" wire:navigate>{{ __('Agreements') }}</flux:navlist.item>
+            <flux:navlist.item icon="wrench-screwdriver" :href="$company ? route('company.maintenance', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.maintenance')" wire:navigate>{{ __('Maintenance') }}</flux:navlist.item>
+            <flux:navlist.item icon="calendar-days" :href="$company ? route('company.appointments', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.appointments')" wire:navigate>{{ __('Appointments') }}</flux:navlist.item>
         </flux:navlist.group>
 
         <flux:navlist.group :heading="__('Company')" class="grid">

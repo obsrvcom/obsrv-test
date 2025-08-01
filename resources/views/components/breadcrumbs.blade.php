@@ -28,6 +28,8 @@
                     ]
                 ],
                 $routeName === 'company.agreements' => ['label' => 'Agreements', 'url' => null],
+                $routeName === 'company.maintenance' => ['label' => 'Maintenance', 'url' => null],
+                $routeName === 'company.appointments' => ['label' => 'Appointments', 'url' => null],
                 $routeName === 'company.contacts' => ['label' => 'Contacts', 'url' => null],
                 $routeName === 'company.contact-groups' => ['label' => 'Contact Groups', 'url' => null],
                 $routeName === 'company.sites' => ['label' => 'Sites', 'url' => null],

@@ -50,6 +50,27 @@ class Company extends Model
         return $this->hasManyThrough(Ticket::class, Site::class);
     }
 
+    public function servicePlanGroups()
+    {
+        return $this->hasMany(ServicePlanGroup::class);
+    }
+
+    public function servicePlanFeatureCategories()
+    {
+        return $this->hasMany(ServicePlanFeatureCategory::class);
+    }
+
+    // New service plans structure relationships
+    public function servicePlansNew()
+    {
+        return $this->hasMany(ServicePlanNew::class);
+    }
+
+    public function servicePlanFeatureGroupsNew()
+    {
+        return $this->hasMany(ServicePlanFeatureGroupNew::class);
+    }
+
     public function hasUser(User $user)
     {
         return $this->users()->where('user_id', $user->id)->exists();

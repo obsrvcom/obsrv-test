@@ -82,6 +82,8 @@ Route::prefix('app')->middleware(['auth'])->group(function () {
         Route::get('tickets', CompanyTickets::class)->name('tickets');
         Route::get('tickets/{ticket}', CompanyTicketView::class)->name('tickets.view');
         Volt::route('agreements', 'app.company.agreements')->name('agreements');
+        Volt::route('maintenance', 'app.company.maintenance')->name('maintenance');
+        Volt::route('appointments', 'app.company.appointments')->name('appointments');
         Route::get('contacts', \App\Livewire\Company\Contacts::class)->name('contacts');
         Route::get('contact-groups', \App\Livewire\Company\ContactGroups::class)->name('contact-groups');
         Route::get('sites', \App\Livewire\Company\Sites::class)->name('sites');
@@ -89,7 +91,7 @@ Route::prefix('app')->middleware(['auth'])->group(function () {
         Volt::route('monitoring', 'app.company.monitoring')->name('monitoring');
         Route::get('teams', \App\Livewire\Company\Teams::class)->name('teams');
         Route::get('users', \App\Livewire\Company\Users::class)->name('users');
-        Volt::route('service', 'app.company.service.plans')->name('service');
+        Route::get('service', \App\Livewire\Company\ServicePlansNew::class)->name('service');
         Volt::route('billing', 'app.company.billing')->name('billing');
         // Company settings routes - require admin access for modifications
         Route::redirect('settings', 'settings/profile'); // Redirect to profile
