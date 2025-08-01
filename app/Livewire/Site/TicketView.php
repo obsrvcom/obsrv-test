@@ -4,6 +4,7 @@ namespace App\Livewire\Site;
 
 use App\Models\Ticket;
 use App\Models\Site;
+use App\Models\TicketMessageRead;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Renderless;
@@ -14,6 +15,7 @@ class TicketView extends Component
     public Ticket $ticket;
     public $newMessage = '';
     public $site;
+    public $firstUnreadMessageId = null; // First unread message for current user
 
     protected $listeners = [
         'messageAdded' => 'refreshTimeline',
@@ -56,7 +58,37 @@ class TicketView extends Component
             abort(403, 'You do not have access to this ticket.');
         }
 
+                // Find first unread message for scroll positioning
+        $this->findFirstUnreadMessage();
+    }
 
+    /**
+     * Find the first unread message for current user
+     */
+    private function findFirstUnreadMessage()
+    {
+        $firstUnread = $this->ticket->messages()
+            ->where('message_type', '!=', 'internal')
+            ->whereDoesntHave('reads', function ($query) {
+                $query->where('user_id', auth()->id());
+            })
+            ->orderBy('created_at')
+            ->first();
+
+        $this->firstUnreadMessageId = $firstUnread?->id;
+    }
+
+    /**
+     * Mark a single message as read
+     */
+    public function markMessageAsRead($messageId)
+    {
+        TicketMessageRead::markAsRead($messageId, auth()->id());
+
+        // Update first unread if this was it
+        if ($this->firstUnreadMessageId == $messageId) {
+            $this->findFirstUnreadMessage();
+        }
     }
 
     public function getMessagesProperty()

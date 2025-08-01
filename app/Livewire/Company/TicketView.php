@@ -8,6 +8,7 @@ use App\Models\Team;
 use App\Models\User;
 use App\Models\Site;
 use App\Models\TicketDraft;
+use App\Models\TicketMessageRead;
 use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
@@ -24,6 +25,10 @@ class TicketView extends Component
     public $messageType = 'internal'; // Default to internal messages
     public $filters = []; // Filters for timeline: customer_chat, internal_chat, activity_updates
     public $onlineUsers = []; // Users currently viewing this ticket
+    public $readIndicators = []; // Read status for each message
+    public $allReaderUsers = []; // All users who have read any message in this ticket
+    public $firstUnreadMessageId = null; // First unread message for current user
+    public $lastReadMessageId = null; // Last message read by current user
 
     // Modal states
     public $showChangeSiteModal = false;
@@ -69,11 +74,15 @@ class TicketView extends Component
     public function setOnlineUsers($users)
     {
         $this->onlineUsers = is_array($users) ? $users : [];
+
+        // Refresh reader users to update online status and re-sort
+        $this->initializeAllReaderUsers();
     }
 
     public function debugOnlineUsers()
     {
         \Log::info('Debug onlineUsers', ['data' => $this->onlineUsers]);
+        \Log::info('Debug allReaderUsers', ['data' => $this->allReaderUsers]);
         $this->dispatch('debug-console', ['data' => $this->onlineUsers]);
     }
 
@@ -132,7 +141,221 @@ class TicketView extends Component
             $this->customerMessage = $existingDraft->content;
         }
 
+        // Initialize read indicators
+        $this->initializeReadIndicators();
 
+        // Initialize all users who have read messages
+        $this->initializeAllReaderUsers();
+    }
+
+    /**
+     * Initialize read indicators for all users who have access to this ticket
+     */
+    public function initializeReadIndicators()
+    {
+        $messages = $this->ticket->messages()->with('reads.user')->get();
+
+        // Get all relevant users (site users + company users)
+        $siteUsers = $this->ticket->site->users;
+        $companyUsers = $this->ticket->site->company->users;
+        $allUsers = $siteUsers->merge($companyUsers)->unique('id');
+
+        $this->readIndicators = [];
+        $firstUnreadFound = false;
+
+        foreach ($messages as $message) {
+            $readStatus = [];
+            $readByUsers = [];
+
+            foreach ($allUsers as $user) {
+                $isRead = $message->isReadByUser($user->id);
+                $readStatus[$user->id] = [
+                    'is_read' => $isRead,
+                    'user' => $user,
+                ];
+
+                if ($isRead) {
+                    $readByUsers[] = $user;
+                }
+            }
+
+            // Track first unread message for current user
+            if (!$firstUnreadFound && !$message->isReadByUser(auth()->id())) {
+                $this->firstUnreadMessageId = $message->id;
+                $firstUnreadFound = true;
+            }
+
+            $this->readIndicators[$message->id] = [
+                'read_status' => $readStatus,
+                'read_by_users' => $readByUsers,
+                'total_readers' => count($readByUsers),
+                'total_users' => count($allUsers),
+            ];
+        }
+
+        // Get last read message for current user
+        $lastRead = TicketMessageRead::where('user_id', auth()->id())
+            ->whereHas('ticketMessage', function ($query) {
+                $query->where('ticket_id', $this->ticket->id);
+            })
+            ->latest('read_at')
+            ->first();
+
+        $this->lastReadMessageId = $lastRead?->ticket_message_id;
+    }
+
+    /**
+     * Mark messages as read by current user
+     */
+    public function markMessagesAsRead(array $messageIds)
+    {
+        foreach ($messageIds as $messageId) {
+            TicketMessageRead::markAsRead($messageId, auth()->id());
+        }
+
+        // Refresh read indicators
+        $this->initializeReadIndicators();
+    }
+
+        /**
+     * Mark a single message as read
+     */
+    public function markMessageAsRead($messageId)
+    {
+        TicketMessageRead::markAsRead($messageId, auth()->id());
+
+        // Update read indicators for this message
+        $this->updateReadIndicatorForMessage($messageId);
+
+        // Refresh all reader users to include new reader
+        $this->initializeAllReaderUsers();
+    }
+
+    /**
+     * Update read indicator for a specific message
+     */
+    private function updateReadIndicatorForMessage($messageId)
+    {
+        $message = $this->ticket->messages()->with('reads.user')->find($messageId);
+        if (!$message) return;
+
+        // Get all relevant users
+        $siteUsers = $this->ticket->site->users;
+        $companyUsers = $this->ticket->site->company->users;
+        $allUsers = $siteUsers->merge($companyUsers)->unique('id');
+
+        $readStatus = [];
+        $readByUsers = [];
+
+        foreach ($allUsers as $user) {
+            $isRead = $message->isReadByUser($user->id);
+            $readStatus[$user->id] = [
+                'is_read' => $isRead,
+                'user' => $user,
+            ];
+
+            if ($isRead) {
+                $readByUsers[] = $user;
+            }
+        }
+
+        $this->readIndicators[$messageId] = [
+            'read_status' => $readStatus,
+            'read_by_users' => $readByUsers,
+            'total_readers' => count($readByUsers),
+            'total_users' => count($allUsers),
+        ];
+
+        // Update first unread if this was it
+        if ($this->firstUnreadMessageId == $messageId) {
+            $this->findNextUnreadMessage();
+        }
+    }
+
+    /**
+     * Find the next unread message for current user
+     */
+    private function findNextUnreadMessage()
+    {
+        $nextUnread = $this->ticket->messages()
+            ->whereDoesntHave('reads', function ($query) {
+                $query->where('user_id', auth()->id());
+            })
+            ->orderBy('created_at')
+            ->first();
+
+        $this->firstUnreadMessageId = $nextUnread?->id;
+    }
+
+        /**
+     * Initialize all users who have read any message in this ticket with smart ordering
+     */
+    public function initializeAllReaderUsers()
+    {
+        // Get all users who have read any message in this ticket with their latest read time
+        $readerData = TicketMessageRead::whereHas('ticketMessage', function ($query) {
+            $query->where('ticket_id', $this->ticket->id);
+        })
+        ->selectRaw('user_id, MAX(read_at) as latest_read_at')
+        ->groupBy('user_id')
+        ->get()
+        ->keyBy('user_id');
+
+        if ($readerData->isEmpty()) {
+            $this->allReaderUsers = [];
+            return;
+        }
+
+        // Get user details for all readers
+        $users = User::whereIn('id', $readerData->keys())->get();
+
+        // Get latest message to check if users are up to date
+        $latestMessage = $this->ticket->messages()->latest()->first();
+
+        $allUsers = $users->map(function ($user) use ($readerData, $latestMessage) {
+            // Check if user has site or company access
+            $hasSiteAccess = $user->sites()->where('sites.id', $this->ticket->site_id)->exists();
+            $hasCompanyAccess = $user->companies()->where('companies.id', $this->ticket->site->company_id)->exists();
+
+            if (!$hasSiteAccess && !$hasCompanyAccess) {
+                return null; // Skip users who no longer have access
+            }
+
+            $isCompanyUser = $hasCompanyAccess;
+            $latestReadAt = $readerData[$user->id]->latest_read_at;
+
+            // Check if user is online
+            $isOnline = collect($this->onlineUsers)->contains('id', $user->id);
+
+            // Check if user has read the latest message (is up to date)
+            $isUpToDate = $latestMessage ? $latestMessage->isReadByUser($user->id) : true;
+
+            $userData = [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'initials' => $user->initials(),
+                'type' => $isCompanyUser ? 'company' : 'customer',
+                'latest_read_at' => $latestReadAt,
+                'is_online' => $isOnline,
+                'is_up_to_date' => $isUpToDate,
+                'sort_priority' => $isOnline ? 0 : 1, // Online users first
+            ];
+
+            // Add job title for company users
+            if ($isCompanyUser) {
+                $companyUser = $user->companies()->where('companies.id', $this->ticket->site->company_id)->first();
+                $userData['job_title'] = $companyUser->pivot->job_title ?? null;
+            }
+
+            return $userData;
+        })->filter()->values();
+
+        // Sort users: online first, then by most recent read time
+        $this->allReaderUsers = $allUsers->sortBy([
+            ['sort_priority', 'asc'],  // Online users first (0 before 1)
+            ['latest_read_at', 'desc'], // Most recent readers first
+        ])->values()->toArray();
     }
 
     public function getCombinedTimelineProperty()

@@ -87,82 +87,54 @@
                 </div>
             </div>
 
-            <!-- Online Users Display -->
+                                    <!-- Combined User Display -->
             <div class="flex items-center gap-2">
-                <span class="text-xs text-gray-500">Viewing: ({{ count($onlineUsers) }})</span>
-                                @if(app()->environment('local'))
-                    <button wire:click="debugOnlineUsers"
-                            class="text-xs bg-red-100 text-red-600 px-1 rounded">Debug</button>
-                @endif
-                                                                              @if(count($onlineUsers) > 0)
-                    <flux:avatar.group wire:key="online-users-{{ count($onlineUsers) }}">
-                        @foreach(array_slice($onlineUsers, 0, 5) as $index => $user)
-                            @if(is_array($user) && isset($user['type'], $user['name'], $user['initials']))
-                                <flux:dropdown hover position="bottom" wire:key="user-dropdown-{{ $user['id'] }}">
-                                    <flux:avatar
-                                        as="button"
-                                        size="sm"
-                                        circle
-                                        name="{{ $user['name'] }}"
-                                        initials="{{ $user['initials'] }}"
-                                        color="{{ $user['type'] === 'company' ? 'blue' : 'green' }}"
-                                    />
-                                    <flux:popover class="w-64">
-                                        <div class="space-y-3">
-                                            <div class="flex items-start gap-3">
-                                                <flux:avatar
-                                                    size="lg"
-                                                    circle
-                                                    name="{{ $user['name'] }}"
-                                                    initials="{{ $user['initials'] }}"
-                                                    color="{{ $user['type'] === 'company' ? 'blue' : 'green' }}"
-                                                />
-                                                <div class="flex-1 min-w-0">
-                                                    <flux:heading size="sm">{{ $user['name'] }}</flux:heading>
-                                                    @if($user['type'] === 'company' && !empty($user['job_title']))
-                                                        <flux:text class="text-xs text-gray-600">{{ $user['job_title'] }}</flux:text>
-                                                    @endif
-                                                    <flux:text class="text-xs">{{ $user['email'] }}</flux:text>
-                                                    <flux:badge
-                                                        size="sm"
-                                                        color="{{ $user['type'] === 'company' ? 'blue' : 'green' }}"
-                                                        class="mt-1"
-                                                    >
-                                                        {{ ucfirst($user['type']) }}
-                                                    </flux:badge>
-                                                </div>
-                                            </div>
-                                            <flux:text class="text-xs text-gray-500">
-                                                Currently viewing this ticket
-                                            </flux:text>
-                                        </div>
-                                    </flux:popover>
-                                </flux:dropdown>
-                            @else
-                                <!-- Debug: show invalid user data -->
+
+
+                @if(count($allReaderUsers) > 0)
+
+                    <flux:avatar.group>
+                        @foreach(array_slice($allReaderUsers, 0, 8) as $index => $user)
+                            @if($user['is_online'])
                                 <flux:avatar
                                     size="sm"
                                     circle
-                                    color="red"
-                                    initials="?"
-                                    tooltip="Invalid user data"
-                                    wire:key="invalid-{{ $index }}"
+                                    name="{{ $user['name'] }}"
+                                    color="{{ $user['type'] === 'company' ? 'blue' : 'green' }}"
+                                    class="border-2 border-green-600"
+                                />
+                            @elseif(!$user['is_up_to_date'])
+                                <flux:avatar
+                                    size="sm"
+                                    circle
+                                    name="{{ $user['name'] }}"
+                                    color="{{ $user['type'] === 'company' ? 'blue' : 'green' }}"
+                                    badge
+                                    badge:color="zinc"
+                                    badge:position="bottom left"
+                                />
+                            @else
+                                <flux:avatar
+                                    size="sm"
+                                    circle
+                                    name="{{ $user['name'] }}"
+                                    color="{{ $user['type'] === 'company' ? 'blue' : 'green' }}"
+                                    class=""
                                 />
                             @endif
                         @endforeach
-                        @if(count($onlineUsers) > 5)
+                        @if(count($allReaderUsers) > 8)
                             <flux:avatar
                                 size="sm"
                                 circle
                                 color="zinc"
-                                tooltip="{{ count($onlineUsers) - 5 }} more users viewing"
-                                wire:key="overflow-count"
+                                tooltip="{{ count($allReaderUsers) - 8 }} more readers"
                             >
-                                +{{ count($onlineUsers) - 5 }}
+                                +{{ count($allReaderUsers) - 8 }}
                             </flux:avatar>
                         @endif
                     </flux:avatar.group>
-            @endif
+                @endif
             </div>
         </div>
     </div>
@@ -284,8 +256,32 @@
             <!-- Combined Messages Timeline -->
             <div class="flex-1 overflow-y-auto bg-gray-50 px-4 py-4 flex flex-col-reverse"
                  id="messages-container"
-                 x-data="{ scrollToBottom() { this.$el.scrollTop = this.$el.scrollHeight; } }"
-                 @scroll-to-bottom.window="scrollToBottom()">
+                 x-data="{
+                    scrollToBottom() {
+                        this.$el.scrollTop = this.$el.scrollHeight;
+                    },
+                    scrollToUnread() {
+                        const unreadSeparator = this.$el.querySelector('.unread-separator');
+                        if (unreadSeparator) {
+                            // Scroll to unread separator with some offset
+                            const containerHeight = this.$el.clientHeight;
+                            const separatorTop = unreadSeparator.offsetTop;
+                            this.$el.scrollTop = separatorTop - (containerHeight / 3);
+                        } else {
+                            // If no unread messages, scroll to bottom
+                            this.scrollToBottom();
+                        }
+                    }
+                 }"
+                 x-init="
+                    @if($firstUnreadMessageId)
+                        $nextTick(() => scrollToUnread());
+                    @else
+                        $nextTick(() => scrollToBottom());
+                    @endif
+                 "
+                 @scroll-to-bottom.window="scrollToBottom()"
+                 @scroll-to-unread.window="scrollToUnread()">
 
                                                 <div class="space-y-6 flex flex-col-reverse">
                     <!-- Current Drafts (always at bottom) -->
@@ -357,45 +353,99 @@
                             <div class="space-y-3">
                                 @foreach($group->items as $item)
                                     @if($item->type === 'message')
-                                        @php $message = $item->data; @endphp
+                                        @php
+                                            $message = $item->data;
+                                            $isUnreadStart = $firstUnreadMessageId && $message->id == $firstUnreadMessageId;
+                                            $readInfo = isset($readIndicators[$message->id]) ? $readIndicators[$message->id] : null;
+                                        @endphp
+
+                                        {{-- Unread separator --}}
+                                        @if($isUnreadStart)
+                                            <div class="flex items-center justify-center my-4 unread-separator">
+                                                <div class="flex-1 border-t border-red-300"></div>
+                                                <div class="flex items-center gap-2 px-4 py-2 bg-red-50 rounded-full border border-red-300">
+                                                    <flux:icon.exclamation-circle class="w-4 h-4 text-red-500" />
+                                                    <span class="text-sm font-medium text-red-700">Unread Messages</span>
+                                                </div>
+                                                <div class="flex-1 border-t border-red-300"></div>
+                                            </div>
+                                        @endif
+
                                         @if($message->message_type === 'customer')
                                             <!-- Customer Message -->
                                             <div class="flex justify-start">
                                                 <div class="w-1/2">
-                                                    <div class="bg-blue-600 text-white rounded-lg px-4 py-3">
+                                                    <div class="bg-blue-600 text-white rounded-lg px-4 py-3"
+                                                         x-data="{}"
+                                                         x-intersect.half="$wire.markMessageAsRead({{ $message->id }})">
                                                         <div class="flex items-center gap-2 mb-2">
                                                             <span class="text-sm font-medium">{{ $message->user->name }}</span>
                                                             <span class="text-xs opacity-75">Customer</span>
                                                         </div>
-                                                        <p class="break-words">{{ $message->content }}</p>
+                                                                                                                <p class="break-words">{{ $message->content }}</p>
                                                     </div>
                                                 </div>
                                             </div>
-                                                                                @elseif($message->message_type === 'company')
+                                        @elseif($message->message_type === 'company')
                                             <!-- Company Message -->
                                             <div class="flex justify-end">
                                                 <div class="flex items-start gap-3 w-1/2">
                                                     <div class="flex-1">
-                                                        <div class="bg-white border border-gray-200 rounded-lg px-4 py-3">
+                                                        <div class="bg-white border border-gray-200 rounded-lg px-4 py-3"
+                                                             x-data="{}"
+                                                             x-intersect.half="$wire.markMessageAsRead({{ $message->id }})">
                                                             <div class="flex items-center gap-2 mb-2">
                                                                 <span class="text-sm font-medium text-gray-900">{{ $message->user->name }}</span>
                                                                 <span class="text-xs text-gray-500">Support</span>
                                                             </div>
-                                                            <p class="text-gray-900 break-words">{{ $message->content }}</p>
+                                                                                                                        <p class="text-gray-900 break-words">{{ $message->content }}</p>
                                                         </div>
                                                     </div>
                                                     <div class="flex-shrink-0">
-                                                        @if($company->avatar)
-                                                            <div class="w-8 h-8 rounded-full overflow-hidden">
-                                                                <img src="{{ $company->getAvatarUrl() }}"
-                                                                     alt="{{ $company->name }}"
-                                                                     class="w-full h-full object-cover">
-                                                            </div>
-                                                        @else
-                                                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-xs font-medium text-white">
-                                                                {{ strtoupper(substr($company->name, 0, 2)) }}
-                                                            </div>
-                                                        @endif
+                                                        <flux:dropdown hover position="bottom" wire:key="message-reads-{{ $message->id }}">
+                                                            <flux:button variant="ghost" class="p-0 h-auto">
+                                                                @if($company->avatar)
+                                                                    <div class="w-8 h-8 rounded-full overflow-hidden">
+                                                                        <img src="{{ $company->getAvatarUrl() }}"
+                                                                             alt="{{ $company->name }}"
+                                                                             class="w-full h-full object-cover">
+                                                                    </div>
+                                                                @else
+                                                                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-xs font-medium text-white">
+                                                                        {{ strtoupper(substr($company->name, 0, 2)) }}
+                                                                    </div>
+                                                                @endif
+                                                            </flux:button>
+                                                            <flux:popover class="w-64">
+                                                                <div class="space-y-3">
+                                                                    <flux:heading size="sm">Message Read Status</flux:heading>
+                                                                    @if($readInfo && count($readInfo['read_by_users']) > 0)
+                                                                        <div class="space-y-2">
+                                                                            <flux:text class="text-xs text-gray-600">
+                                                                                {{ count($readInfo['read_by_users']) }}/{{ $readInfo['total_users'] }} users have read this message
+                                                                            </flux:text>
+                                                                            <div class="space-y-1">
+                                                                                @foreach($readInfo['read_by_users'] as $user)
+                                                                                    <div class="flex items-center gap-2">
+                                                                                        <flux:avatar
+                                                                                            size="xs"
+                                                                                            circle
+                                                                                            name="{{ $user->name }}"
+                                                                                            initials="{{ $user->initials() }}"
+                                                                                            color="auto"
+                                                                                            color:seed="{{ $user->id }}"
+                                                                                        />
+                                                                                        <flux:text class="text-xs">{{ $user->name }}</flux:text>
+                                                                                    </div>
+                                                                                @endforeach
+                                                                            </div>
+                                                                        </div>
+                                                                    @else
+                                                                        <flux:text class="text-xs text-gray-500">No one has read this message yet</flux:text>
+                                                                    @endif
+                                                                </div>
+                                                            </flux:popover>
+                                                        </flux:dropdown>
                                                     </div>
                                                 </div>
                                             </div>
@@ -404,18 +454,53 @@
                                             <div class="flex justify-start">
                                                 <div class="flex items-start gap-3 max-w-xs lg:max-w-md">
                                                     <div class="flex-shrink-0">
-                                                        <div class="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-xs font-medium text-white">
-                                                            {{ strtoupper($message->user->initials()) }}
-                                                        </div>
+                                                        <flux:dropdown hover position="bottom" wire:key="internal-message-reads-{{ $message->id }}">
+                                                            <flux:button variant="ghost" class="p-0 h-auto">
+                                                                <div class="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-xs font-medium text-white">
+                                                                    {{ strtoupper($message->user->initials()) }}
+                                                                </div>
+                                                            </flux:button>
+                                                            <flux:popover class="w-64">
+                                                                <div class="space-y-3">
+                                                                    <flux:heading size="sm">Internal Message Read Status</flux:heading>
+                                                                    @if($readInfo && count($readInfo['read_by_users']) > 0)
+                                                                        <div class="space-y-2">
+                                                                            <flux:text class="text-xs text-gray-600">
+                                                                                {{ count($readInfo['read_by_users']) }}/{{ $readInfo['total_users'] }} users have read this message
+                                                                            </flux:text>
+                                                                            <div class="space-y-1">
+                                                                                @foreach($readInfo['read_by_users'] as $user)
+                                                                                    <div class="flex items-center gap-2">
+                                                                                        <flux:avatar
+                                                                                            size="xs"
+                                                                                            circle
+                                                                                            name="{{ $user->name }}"
+                                                                                            initials="{{ $user->initials() }}"
+                                                                                            color="auto"
+                                                                                            color:seed="{{ $user->id }}"
+                                                                                        />
+                                                                                        <flux:text class="text-xs">{{ $user->name }}</flux:text>
+                                                                                    </div>
+                                                                                @endforeach
+                                                                            </div>
+                                                                        </div>
+                                                                    @else
+                                                                        <flux:text class="text-xs text-gray-500">No one has read this internal message yet</flux:text>
+                                                                    @endif
+                                                                </div>
+                                                            </flux:popover>
+                                                        </flux:dropdown>
                                                     </div>
                                                     <div class="flex-1">
-                                                        <div class="px-2 py-1">
+                                                        <div class="px-2 py-1"
+                                                             x-data="{}"
+                                                             x-intersect.half="$wire.markMessageAsRead({{ $message->id }})">
                                                             <div class="flex items-center gap-2 mb-1">
                                                                 <flux:icon.lock-closed class="w-3 h-3 text-gray-500" />
                                                                 <span class="text-sm font-medium text-gray-700">{{ $message->user->name }}</span>
                                                             </div>
                                                             <div class="bg-gray-100 rounded-lg px-3 py-2">
-                                                                <p class="text-gray-600 break-words text-sm italic whitespace-pre-wrap">{{ $message->content }}</p>
+                                                                                                                                <p class="text-gray-600 break-words text-sm italic whitespace-pre-wrap">{{ $message->content }}</p>
                                                             </div>
                                                         </div>
                                                     </div>

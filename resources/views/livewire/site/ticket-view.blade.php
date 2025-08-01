@@ -62,25 +62,70 @@
 
 
     <!-- Timeline Container - CSS Auto-scroll from bottom -->
-    <div class="flex-1 flex flex-col-reverse overflow-y-auto px-4 sm:px-6 py-4">
+    <div class="flex-1 flex flex-col-reverse overflow-y-auto px-4 sm:px-6 py-4"
+         x-data="{
+            scrollToBottom() {
+                this.$el.scrollTop = this.$el.scrollHeight;
+            },
+            scrollToUnread() {
+                const unreadSeparator = this.$el.querySelector('.unread-separator');
+                if (unreadSeparator) {
+                    // Scroll to unread separator with some offset
+                    const containerHeight = this.$el.clientHeight;
+                    const separatorTop = unreadSeparator.offsetTop;
+                    this.$el.scrollTop = separatorTop - (containerHeight / 3);
+                } else {
+                    // If no unread messages, scroll to bottom
+                    this.scrollToBottom();
+                }
+            }
+         }"
+         x-init="
+            @if($firstUnreadMessageId)
+                $nextTick(() => scrollToUnread());
+            @else
+                $nextTick(() => scrollToBottom());
+            @endif
+         ">
         <!-- Timeline items in reverse order (newest at bottom) -->
         <div class="flex flex-col space-y-4 max-w-4xl mx-auto w-full">
             @forelse($this->timeline as $item)
                 @if($item->type === 'message')
-                    @php $message = $item->data; @endphp
+                    @php
+                        $message = $item->data;
+                        $isUnreadStart = $firstUnreadMessageId && $message->id == $firstUnreadMessageId;
+                        $readInfo = isset($readIndicators[$message->id]) ? $readIndicators[$message->id] : null;
+                    @endphp
+
+                    {{-- Unread separator --}}
+                    @if($isUnreadStart)
+                        <div class="flex items-center justify-center my-4 unread-separator">
+                            <div class="flex-1 border-t border-red-300"></div>
+                            <div class="flex items-center gap-2 px-4 py-2 bg-red-50 rounded-full border border-red-300">
+                                <flux:icon.exclamation-circle class="w-4 h-4 text-red-500" />
+                                <span class="text-sm font-medium text-red-700">Unread Messages</span>
+                            </div>
+                            <div class="flex-1 border-t border-red-300"></div>
+                        </div>
+                    @endif
+
                     <div class="flex {{ $message->isCustomerMessage() ? 'justify-end' : 'justify-start' }}">
                         <div class="max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-2xl">
                             @if($message->isCustomerMessage())
                                 <!-- Customer Message -->
-                                <div class="bg-blue-600 text-white rounded-lg px-4 py-3">
-                                    <p class="break-words">{{ $message->content }}</p>
+                                <div class="bg-blue-600 text-white rounded-lg px-4 py-3"
+                                     x-data="{}"
+                                     x-intersect.half="$wire.markMessageAsRead({{ $message->id }})">
+                                                                        <p class="break-words">{{ $message->content }}</p>
                                     <p class="text-xs mt-2 opacity-75">
                                         {{ $message->created_at->format('M j, Y g:i A') }}
                                     </p>
                                 </div>
                             @else
-                                <!-- Company Message -->
-                                <div class="bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-sm">
+                                                                <!-- Company Message -->
+                                <div class="bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-sm"
+                                     x-data="{}"
+                                     x-intersect.half="$wire.markMessageAsRead({{ $message->id }})">
                                     <div class="flex items-center gap-2 mb-2">
                                         <span class="text-sm font-medium text-gray-900">
                                             {{ $message->user->name }}
