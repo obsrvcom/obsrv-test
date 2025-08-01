@@ -9,7 +9,9 @@ use App\Models\User;
 use App\Models\Site;
 use App\Models\TicketDraft;
 use App\Models\TicketMessageRead;
+use App\Models\TicketSubscription;
 use Carbon\Carbon;
+use Flux\Flux;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Renderless;
@@ -29,6 +31,7 @@ class TicketView extends Component
     public $allReaderUsers = []; // All users who have read any message in this ticket
     public $firstUnreadMessageId = null; // First unread message for current user
     public $lastReadMessageId = null; // Last message read by current user
+    public $isSubscribed = false; // Whether current user is subscribed to this ticket
 
     // Modal states
     public $showChangeSiteModal = false;
@@ -146,6 +149,25 @@ class TicketView extends Component
 
         // Initialize all users who have read messages
         $this->initializeAllReaderUsers();
+
+        // Initialize subscription status
+        $this->isSubscribed = $this->ticket->isUserSubscribed(auth()->id());
+    }
+
+    /**
+     * Toggle subscription status for current user
+     */
+    public function toggleSubscription()
+    {
+        if ($this->isSubscribed) {
+            $this->ticket->unsubscribeUser(auth()->id());
+            $this->isSubscribed = false;
+            Flux::toast(text: 'You have unsubscribed from this ticket.', variant: 'success', duration: 3500);
+        } else {
+            $this->ticket->subscribeUser(auth()->id());
+            $this->isSubscribed = true;
+            Flux::toast(text: 'You have subscribed to this ticket for notifications.', variant: 'success', duration: 3500);
+        }
     }
 
     /**
@@ -625,6 +647,12 @@ class TicketView extends Component
                 'content' => trim($this->customerMessage),
             ]);
 
+            // Auto-subscribe user when they reply to ticket
+            if (!$this->isSubscribed) {
+                $this->ticket->subscribeUser(auth()->id());
+                $this->isSubscribed = true;
+            }
+
             // Clear the draft after sending
             $this->clearDraft('customer');
 
@@ -635,7 +663,7 @@ class TicketView extends Component
             broadcast(new \App\Events\TicketUpdated($this->ticket));
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to send message. Please try again.');
+            Flux::toast(text: 'Failed to send message. Please try again.', variant: 'danger', duration: 3500);
         } finally {
             $this->isLoadingCustomer = false;
         }
@@ -656,12 +684,18 @@ class TicketView extends Component
                 'content' => trim($this->internalMessage),
             ]);
 
+            // Auto-subscribe user when they reply to ticket
+            if (!$this->isSubscribed) {
+                $this->ticket->subscribeUser(auth()->id());
+                $this->isSubscribed = true;
+            }
+
             $this->internalMessage = '';
             $this->dispatch('messageAdded');
             $this->dispatch('scrollToBottom');
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to send internal note. Please try again.');
+            Flux::toast(text: 'Failed to send internal note. Please try again.', variant: 'danger', duration: 3500);
         } finally {
             $this->isLoadingInternal = false;
         }
@@ -696,7 +730,7 @@ class TicketView extends Component
 
         // Ensure the new site belongs to this company
         if ($newSite->company_id !== $this->company->id) {
-            session()->flash('error', 'Invalid site selected.');
+            Flux::toast(text: 'Invalid site selected.', variant: 'danger', duration: 3500);
             return;
         }
 

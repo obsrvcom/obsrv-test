@@ -83,6 +83,40 @@ class Ticket extends Model
         return $this->hasMany(TicketDraft::class);
     }
 
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(TicketSubscription::class);
+    }
+
+    public function subscribers(): HasMany
+    {
+        return $this->hasMany(TicketSubscription::class)->with('user');
+    }
+
+    /**
+     * Subscribe a user to this ticket
+     */
+    public function subscribeUser(int $userId): TicketSubscription
+    {
+        return TicketSubscription::subscribe($this->id, $userId);
+    }
+
+    /**
+     * Unsubscribe a user from this ticket
+     */
+    public function unsubscribeUser(int $userId): bool
+    {
+        return TicketSubscription::unsubscribe($this->id, $userId);
+    }
+
+    /**
+     * Check if a user is subscribed to this ticket
+     */
+    public function isUserSubscribed(int $userId): bool
+    {
+        return TicketSubscription::isSubscribed($this->id, $userId);
+    }
+
     protected static function boot()
     {
         parent::boot();

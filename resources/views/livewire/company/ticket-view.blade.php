@@ -87,9 +87,8 @@
                 </div>
             </div>
 
-                                    <!-- Combined User Display -->
+                        <!-- Combined User Display -->
             <div class="flex items-center gap-2">
-
 
                 @if(count($allReaderUsers) > 0)
 
@@ -135,6 +134,20 @@
                         @endif
                     </flux:avatar.group>
                 @endif
+
+                <!-- Subscribe Button -->
+                <div class="border-l border-gray-300 h-6 mx-2"></div>
+
+                <flux:button
+                    wire:click="toggleSubscription"
+                    variant="{{ $isSubscribed ? 'filled' : 'outline' }}"
+                    color="{{ $isSubscribed ? 'green' : 'zinc' }}"
+                    size="xs"
+                    icon="{{ $isSubscribed ? 'bell-slash' : 'bell' }}"
+                    tooltip="{{ $isSubscribed ? 'Unsubscribe from notifications' : 'Subscribe to notifications' }}"
+                >
+                    {{ $isSubscribed ? 'Subscribed' : 'Subscribe' }}
+                </flux:button>
             </div>
         </div>
     </div>
@@ -374,15 +387,25 @@
                                         @if($message->message_type === 'customer')
                                             <!-- Customer Message -->
                                             <div class="flex justify-start">
-                                                <div class="w-1/2">
-                                                    <div class="bg-blue-600 text-white rounded-lg px-4 py-3"
-                                                         x-data="{}"
-                                                         x-intersect.half="$wire.markMessageAsRead({{ $message->id }})">
-                                                        <div class="flex items-center gap-2 mb-2">
-                                                            <span class="text-sm font-medium">{{ $message->user->name }}</span>
-                                                            <span class="text-xs opacity-75">Customer</span>
+                                                <div class="flex items-start gap-3 w-1/2">
+                                                    <div class="flex-shrink-0">
+                                                        <flux:avatar
+                                                            size="sm"
+                                                            circle
+                                                            icon="user"
+                                                            color="blue"
+                                                        />
+                                                    </div>
+                                                    <div class="flex-1">
+                                                        <div class="bg-blue-600 text-white rounded-lg px-4 py-3"
+                                                             x-data="{}"
+                                                             x-intersect.half="$wire.markMessageAsRead({{ $message->id }})">
+                                                            <div class="flex items-center gap-2 mb-2">
+                                                                <span class="text-sm font-medium">{{ $message->user->name }}</span>
+                                                                <span class="text-xs opacity-75">Customer</span>
+                                                            </div>
+                                                            <p class="break-words">{{ $message->content }}</p>
                                                         </div>
-                                                                                                                <p class="break-words">{{ $message->content }}</p>
                                                     </div>
                                                 </div>
                                             </div>
