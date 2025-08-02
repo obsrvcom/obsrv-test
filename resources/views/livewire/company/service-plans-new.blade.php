@@ -21,7 +21,7 @@
 
     <!-- Plans List -->
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-neutral-200 dark:border-neutral-700 flex-1 overflow-hidden">
-        <div class="h-full overflow-y-auto p-6">
+        <div class="h-full overflow-y-auto p-4">
             @include('livewire.company.service-plans-new.list')
         </div>
     </div>

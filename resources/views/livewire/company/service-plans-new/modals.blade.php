@@ -17,17 +17,70 @@
                 <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
             @enderror
 
-            <flux:input label="Plan Color" type="color" wire:model="planForm.color" />
-
-            <div>
-                <flux:checkbox wire:model="planForm.is_active" label="Active" />
-                <flux:text size="sm" class="mt-1 text-gray-600">Active plans are visible to customers.</flux:text>
-            </div>
-
             <div class="flex">
                 <flux:spacer />
                 <flux:button variant="ghost" type="button" wire:click="$set('showCreatePlanModal', false)">Cancel</flux:button>
                 <flux:button variant="primary" type="submit">Create Plan</flux:button>
+            </div>
+        </form>
+    </div>
+</flux:modal>
+
+<!-- Edit Revision Modal -->
+<flux:modal variant="flyout" wire:model.self="showEditRevisionModal" class="md:w-96">
+    <div class="space-y-6">
+        <div>
+            <flux:heading size="lg">Edit Revision</flux:heading>
+            <flux:text class="mt-2">Update this revision's details.</flux:text>
+        </div>
+
+        <form wire:submit="updateRevision" class="space-y-6">
+            <flux:input label="Revision Name" wire:model="editRevisionForm.name" placeholder="e.g., v1.1, Q1 2025 Update" required />
+            @error('editRevisionForm.name')
+                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+            @enderror
+
+            <flux:select label="Status" wire:model="editRevisionForm.status">
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+                <option value="archived">Archived</option>
+            </flux:select>
+            @error('editRevisionForm.status')
+                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+            @enderror
+
+            <div class="flex">
+                <flux:spacer />
+                <flux:button variant="ghost" type="button" wire:click="$set('showEditRevisionModal', false)">Cancel</flux:button>
+                <flux:button variant="primary" type="submit">Update Revision</flux:button>
+            </div>
+        </form>
+    </div>
+</flux:modal>
+
+<!-- Edit Plan Modal -->
+<flux:modal variant="flyout" wire:model.self="showEditPlanModal" class="md:w-96">
+    <div class="space-y-6">
+        <div>
+            <flux:heading size="lg">Edit Service Plan</flux:heading>
+            <flux:text class="mt-2">Update the service plan details.</flux:text>
+        </div>
+
+        <form wire:submit="updatePlan" class="space-y-6">
+            <flux:input label="Plan Name" wire:model="editPlanForm.name" placeholder="e.g., Standard 2025, Premium Care 2024" required />
+            @error('editPlanForm.name')
+                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+            @enderror
+
+            <flux:textarea label="Description" wire:model="editPlanForm.description" placeholder="Describe this service plan..." rows="3" />
+            @error('editPlanForm.description')
+                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+            @enderror
+
+            <div class="flex">
+                <flux:spacer />
+                <flux:button variant="ghost" type="button" wire:click="$set('showEditPlanModal', false)">Cancel</flux:button>
+                <flux:button variant="primary" type="submit">Update Plan</flux:button>
             </div>
         </form>
     </div>
@@ -54,11 +107,6 @@
 
             <flux:input label="Revision Name" wire:model="revisionForm.name" placeholder="e.g., v1.1, Q1 2025 Update" required />
             @error('revisionForm.name')
-                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
-            @enderror
-
-            <flux:textarea label="Description" wire:model="revisionForm.description" placeholder="What's new in this revision..." rows="3" />
-            @error('revisionForm.description')
                 <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
             @enderror
 
@@ -231,5 +279,43 @@
                 <flux:button variant="primary" type="submit">Create Feature</flux:button>
             </div>
         </form>
+    </div>
+</flux:modal>
+
+<!-- Delete Revision Confirmation Modal -->
+<flux:modal variant="confirm" wire:model.self="showDeleteRevisionModal">
+    <div class="space-y-6">
+        <div>
+            <flux:heading size="lg">Delete Revision</flux:heading>
+            <flux:text class="mt-2">
+                Are you sure you want to delete the revision <strong>{{ $revisionToDelete?->name }}</strong>?
+                This action cannot be undone.
+            </flux:text>
+        </div>
+
+        <div class="flex">
+            <flux:spacer />
+            <flux:button variant="ghost" wire:click="cancelDeleteRevision">Cancel</flux:button>
+            <flux:button variant="danger" wire:click="deleteRevision">Delete Revision</flux:button>
+        </div>
+    </div>
+</flux:modal>
+
+<!-- Delete Plan Confirmation Modal -->
+<flux:modal variant="confirm" wire:model.self="showDeletePlanModal">
+    <div class="space-y-6">
+        <div>
+            <flux:heading size="lg">Delete Service Plan</flux:heading>
+            <flux:text class="mt-2">
+                Are you sure you want to delete the service plan <strong>{{ $planToDelete?->name }}</strong>?
+                This action cannot be undone.
+            </flux:text>
+        </div>
+
+        <div class="flex">
+            <flux:spacer />
+            <flux:button variant="ghost" wire:click="cancelDeletePlan">Cancel</flux:button>
+            <flux:button variant="danger" wire:click="deletePlan">Delete Plan</flux:button>
+        </div>
     </div>
 </flux:modal>

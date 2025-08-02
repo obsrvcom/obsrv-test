@@ -94,7 +94,7 @@
                                                     <flux:button size="xs" variant="ghost" icon="ellipsis-horizontal" />
 
                                                     <flux:menu>
-                                                        <flux:menu.item icon="pencil" wire:click="editRevision({{ $revision->id }})">Edit Revision</flux:menu.item>
+                                                        <flux:menu.item icon="pencil" wire:click="openEditRevisionModal({{ $revision->id }})">Edit Revision</flux:menu.item>
                                                         @if(!$revision->is_current)
                                                             <flux:menu.separator />
                                                             <flux:menu.item icon="archive-box" variant="danger" wire:click="archiveRevision({{ $revision->id }})">Archive Revision</flux:menu.item>
