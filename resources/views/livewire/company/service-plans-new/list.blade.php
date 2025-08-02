@@ -68,6 +68,7 @@
                                                     Current
                                                 </span>
                                             @endif
+
                                         </div>
                                     </div>
                                     @if($revision->description)

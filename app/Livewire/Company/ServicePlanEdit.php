@@ -1,0 +1,437 @@
+<?php
+
+namespace App\Livewire\Company;
+
+use App\Models\Company;
+use App\Models\ServicePlanNew;
+use App\Models\ServicePlanRevision;
+use App\Models\ServicePlanLevel;
+use App\Models\ServicePlanFeatureGroupNew;
+use App\Models\ServicePlanFeatureNew;
+use Livewire\Component;
+use Livewire\Attributes\Layout;
+use Flux\Flux;
+
+class ServicePlanEdit extends Component
+{
+    public Company $company;
+    public ServicePlanNew $plan;
+    public ?ServicePlanRevision $revision = null;
+
+    // For the edit view tabs
+    public $activeTab = 'levels';
+
+    // Selected items for navigation
+    public $selectedLevel = null;
+
+    // Modal states
+    public $showCreateRevisionModal = false;
+    public $showEditRevisionModal = false;
+    public $showCreateLevelModal = false;
+    public $showCreateFeatureGroupModal = false;
+    public $showCreateFeatureModal = false;
+
+    // Forms
+    public $revisionForm = [
+        'service_plan_id' => '',
+        'name' => '',
+        'description' => '',
+        'status' => 'draft',
+        'version_number' => 1,
+    ];
+
+    public $editRevisionForm = [
+        'id' => '',
+        'name' => '',
+        'description' => '',
+        'status' => 'draft',
+    ];
+
+    public $levelForm = [
+        'service_plan_revision_id' => '',
+        'name' => '',
+        'description' => '',
+        'is_active' => true,
+        'is_featured' => false,
+        'monthly_price' => '',
+        'quarterly_price' => '',
+        'annual_price' => '',
+        'minimum_contract_months' => '',
+        'color' => '#3B82F6',
+    ];
+
+    public $featureGroupForm = [
+        'company_id' => '',
+        'name' => '',
+        'description' => '',
+        'is_active' => true,
+        'color' => '#6366F1',
+    ];
+
+    public $featureForm = [
+        'feature_group_id' => '',
+        'name' => '',
+        'description' => '',
+        'data_type' => 'boolean',
+        'is_active' => true,
+        'affects_sla' => false,
+        'unit' => '',
+        'options' => [],
+    ];
+
+    public function mount(ServicePlanNew $plan, ?ServicePlanRevision $revision = null)
+    {
+        $this->company = auth()->user()->currentCompanyFromRequest() ?? auth()->user()->currentCompany();
+
+        // Ensure the plan belongs to the current company
+        if ($plan->company_id !== $this->company->id) {
+            abort(404);
+        }
+
+        $this->plan = $plan;
+
+        if ($revision) {
+            // Ensure the revision belongs to the plan
+            if ($revision->service_plan_id !== $plan->id) {
+                abort(404);
+            }
+            $this->revision = $revision;
+        } else {
+            // Auto-select current revision or latest revision
+            $this->revision = $plan->getCurrentRevision() ?? $plan->getLatestRevision();
+        }
+
+        $this->featureGroupForm['company_id'] = $this->company->id;
+    }
+
+    // Revision Management
+    public function createRevision()
+    {
+        $this->validate([
+            'revisionForm.name' => 'required|string|max:255',
+            'revisionForm.description' => 'nullable|string',
+        ]);
+
+        // Auto-increment version number
+        $latestVersion = $this->plan->revisions()->max('version_number') ?? 0;
+        $this->revisionForm['version_number'] = $latestVersion + 1;
+        $this->revisionForm['service_plan_id'] = $this->plan->id;
+
+        $revision = ServicePlanRevision::create($this->revisionForm);
+
+        $this->showCreateRevisionModal = false;
+        $this->resetRevisionForm();
+
+        // Navigate to the new revision
+        return redirect()->route('app.company.service.plans.edit.revision', [
+            'company' => $this->company,
+            'plan' => $this->plan,
+            'revision' => $revision
+        ]);
+    }
+
+    public function updateRevision()
+    {
+        $this->validate([
+            'editRevisionForm.name' => 'required|string|max:255',
+            'editRevisionForm.description' => 'nullable|string',
+            'editRevisionForm.status' => 'required|in:draft,published,archived',
+        ]);
+
+        $revision = ServicePlanRevision::find($this->editRevisionForm['id']);
+
+        if (!$revision || $revision->service_plan_id !== $this->plan->id) {
+            Flux::toast('Revision not found.', variant: 'danger');
+            return;
+        }
+
+        $revision->update([
+            'name' => $this->editRevisionForm['name'],
+            'description' => $this->editRevisionForm['description'],
+            'status' => $this->editRevisionForm['status'],
+        ]);
+
+        $this->showEditRevisionModal = false;
+        $this->resetEditRevisionForm();
+
+        Flux::toast('Revision updated successfully!', variant: 'success');
+
+        // Refresh the current revision if it was updated
+        if ($this->revision && $this->revision->id === $revision->id) {
+            $this->revision = $revision->fresh();
+        }
+    }
+
+    // Level Management
+    public function createLevel()
+    {
+        $this->validate([
+            'levelForm.name' => 'required|string|max:255',
+            'levelForm.description' => 'nullable|string',
+            'levelForm.monthly_price' => 'nullable|numeric|min:0',
+            'levelForm.quarterly_price' => 'nullable|numeric|min:0',
+            'levelForm.annual_price' => 'nullable|numeric|min:0',
+            'levelForm.minimum_contract_months' => 'nullable|integer|min:1',
+        ]);
+
+        if (!$this->revision) {
+            Flux::toast('Please select a revision first.', variant: 'danger');
+            return;
+        }
+
+        $this->levelForm['service_plan_revision_id'] = $this->revision->id;
+        $level = $this->revision->levels()->create(array_merge(
+            $this->levelForm,
+            ['sort_order' => $this->revision->levels()->count()]
+        ));
+
+        $this->selectedLevel = $level->id;
+        $this->showCreateLevelModal = false;
+        $this->resetLevelForm();
+
+        Flux::toast('Level created successfully!', variant: 'success');
+    }
+
+    // Feature Group Management
+    public function createFeatureGroup()
+    {
+        $this->validate([
+            'featureGroupForm.name' => 'required|string|max:255',
+            'featureGroupForm.description' => 'nullable|string',
+            'featureGroupForm.is_active' => 'boolean',
+        ]);
+
+        $featureGroup = $this->company->servicePlanFeatureGroupsNew()->create(array_merge(
+            $this->featureGroupForm,
+            ['sort_order' => $this->company->servicePlanFeatureGroupsNew()->count()]
+        ));
+
+        $this->showCreateFeatureGroupModal = false;
+        $this->resetFeatureGroupForm();
+
+        Flux::toast('Feature group created successfully!', variant: 'success');
+    }
+
+    // Feature Management
+    public function createFeature()
+    {
+        $this->validate([
+            'featureForm.feature_group_id' => 'required|exists:service_plan_feature_groups_new,id',
+            'featureForm.name' => 'required|string|max:255',
+            'featureForm.description' => 'nullable|string',
+            'featureForm.data_type' => 'required|in:boolean,text,number,currency,time,select',
+            'featureForm.is_active' => 'boolean',
+            'featureForm.affects_sla' => 'boolean',
+        ]);
+
+        $featureGroup = ServicePlanFeatureGroupNew::find($this->featureForm['feature_group_id']);
+        $feature = $featureGroup->features()->create(array_merge(
+            $this->featureForm,
+            ['sort_order' => $featureGroup->features()->count()]
+        ));
+
+        $this->showCreateFeatureModal = false;
+        $this->resetFeatureForm();
+
+        Flux::toast('Feature created successfully!', variant: 'success');
+    }
+
+    // Modal controls
+    public function openCreateRevisionModal()
+    {
+        $this->resetRevisionForm();
+        $this->revisionForm['service_plan_id'] = $this->plan->id;
+        $this->showCreateRevisionModal = true;
+    }
+
+    public function openEditRevisionModal($revisionId = null)
+    {
+        $revisionId = $revisionId ?? $this->revision?->id;
+
+        if (!$revisionId) {
+            Flux::toast('No revision selected.', variant: 'danger');
+            return;
+        }
+
+        $revision = ServicePlanRevision::find($revisionId);
+
+        if (!$revision || $revision->service_plan_id !== $this->plan->id) {
+            Flux::toast('Revision not found.', variant: 'danger');
+            return;
+        }
+
+        $this->editRevisionForm = [
+            'id' => $revision->id,
+            'name' => $revision->name,
+            'description' => $revision->description ?? '',
+            'status' => $revision->status,
+        ];
+
+        $this->showEditRevisionModal = true;
+    }
+
+    public function openCreateLevelModal($revisionId = null)
+    {
+        $this->resetLevelForm();
+        if ($revisionId) {
+            $this->levelForm['service_plan_revision_id'] = $revisionId;
+        } elseif ($this->revision) {
+            $this->levelForm['service_plan_revision_id'] = $this->revision->id;
+        }
+        $this->showCreateLevelModal = true;
+    }
+
+    public function openCreateFeatureGroupModal()
+    {
+        $this->resetFeatureGroupForm();
+        $this->showCreateFeatureGroupModal = true;
+    }
+
+    public function openCreateFeatureModal($featureGroupId = null)
+    {
+        $this->resetFeatureForm();
+        if ($featureGroupId) {
+            $this->featureForm['feature_group_id'] = $featureGroupId;
+        }
+        $this->showCreateFeatureModal = true;
+    }
+
+    // Form resets
+    public function resetRevisionForm()
+    {
+        $this->revisionForm = [
+            'service_plan_id' => $this->plan->id,
+            'name' => '',
+            'description' => '',
+            'status' => 'draft',
+            'version_number' => 1,
+        ];
+    }
+
+    public function resetEditRevisionForm()
+    {
+        $this->editRevisionForm = [
+            'id' => '',
+            'name' => '',
+            'description' => '',
+            'status' => 'draft',
+        ];
+    }
+
+    public function resetLevelForm()
+    {
+        $this->levelForm = [
+            'service_plan_revision_id' => $this->revision?->id ?? '',
+            'name' => '',
+            'description' => '',
+            'is_active' => true,
+            'is_featured' => false,
+            'monthly_price' => '',
+            'quarterly_price' => '',
+            'annual_price' => '',
+            'minimum_contract_months' => '',
+            'color' => '#3B82F6',
+        ];
+    }
+
+    public function resetFeatureGroupForm()
+    {
+        $this->featureGroupForm = [
+            'company_id' => $this->company->id,
+            'name' => '',
+            'description' => '',
+            'is_active' => true,
+            'color' => '#6366F1',
+        ];
+    }
+
+    public function resetFeatureForm()
+    {
+        $this->featureForm = [
+            'feature_group_id' => '',
+            'name' => '',
+            'description' => '',
+            'data_type' => 'boolean',
+            'is_active' => true,
+            'affects_sla' => false,
+            'unit' => '',
+            'options' => [],
+        ];
+    }
+
+    // Placeholder methods for functionality
+    public function publishRevision($revisionId)
+    {
+        Flux::toast('Publish revision functionality coming soon.', variant: 'info');
+    }
+
+    public function archiveRevision($revisionId)
+    {
+        Flux::toast('Archive revision functionality coming soon.', variant: 'info');
+    }
+
+    public function editLevel($levelId)
+    {
+        Flux::toast('Edit level functionality coming soon.', variant: 'info');
+    }
+
+    public function deleteLevel($levelId)
+    {
+        Flux::toast('Delete level functionality coming soon.', variant: 'info');
+    }
+
+    public function manageLevelFeatures($levelId)
+    {
+        Flux::toast('Manage level features functionality coming soon.', variant: 'info');
+    }
+
+    public function editFeatureGroup($featureGroupId)
+    {
+        Flux::toast('Edit feature group functionality coming soon.', variant: 'info');
+    }
+
+    public function editFeature($featureId)
+    {
+        Flux::toast('Edit feature functionality coming soon.', variant: 'info');
+    }
+
+    public function editFeatureValue($levelId, $featureId)
+    {
+        Flux::toast('Edit feature value functionality coming soon.', variant: 'info');
+    }
+
+    #[Layout('components.layouts.company')]
+    public function render()
+    {
+        $featureGroups = $this->company->servicePlanFeatureGroupsNew()
+            ->with(['features' => function($query) {
+                $query->active()->ordered();
+            }])
+            ->active()
+            ->ordered()
+            ->get();
+
+        // Load the plan with all its revisions
+        $planData = ServicePlanNew::with([
+            'revisions' => function($query) {
+                $query->orderBy('version_number', 'desc');
+            }
+        ])->find($this->plan->id);
+
+        // Load the current revision with its levels
+        $revisionData = null;
+        if ($this->revision) {
+            $revisionData = ServicePlanRevision::with([
+                'levels' => function($query) {
+                    $query->active()->ordered();
+                }
+            ])->find($this->revision->id);
+        }
+
+        return view('livewire.company.service-plan-edit', compact(
+            'featureGroups',
+            'planData',
+            'revisionData'
+        ));
+    }
+}

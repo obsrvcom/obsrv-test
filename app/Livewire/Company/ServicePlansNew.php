@@ -15,12 +15,6 @@ use Flux\Flux;
 class ServicePlansNew extends Component
 {
     public Company $company;
-    public $currentView = 'list'; // 'list' or 'edit'
-    public $editingPlan = null;
-    public $editingRevision = null;
-
-    // For the edit view tabs
-    public $activeEditTab = 'levels';
 
     // Selected items for navigation
     public $selectedPlan = null;
@@ -130,10 +124,10 @@ class ServicePlansNew extends Component
         $this->showCreatePlanModal = false;
         $this->resetPlanForm();
 
-        // Navigate to edit the new plan
-        $this->editPlan($plan->id, $revision->id);
-
         Flux::toast('Service plan created successfully!', variant: 'success');
+
+        // Navigate to edit the new plan
+        return $this->editPlan($plan->id, $revision->id);
     }
 
     // Revision Management
@@ -375,25 +369,37 @@ class ServicePlansNew extends Component
     // Navigation methods
     public function editPlan($planId, $revisionId = null)
     {
-        $this->editingPlan = $planId;
+        $plan = ServicePlanNew::find($planId);
+
         if ($revisionId) {
-            $this->editingRevision = $revisionId;
+            $revision = ServicePlanRevision::find($revisionId);
+            return redirect()->route('app.company.service.plans.edit.revision', [
+                'company' => $this->company,
+                'plan' => $plan,
+                'revision' => $revision
+            ]);
         } else {
-            // Auto-select current revision
-            $plan = ServicePlanNew::find($planId);
-            $currentRevision = $plan->getCurrentRevision();
-            $this->editingRevision = $currentRevision ? $currentRevision->id : null;
+            return redirect()->route('app.company.service.plans.edit', [
+                'company' => $this->company,
+                'plan' => $plan
+            ]);
         }
-        $this->currentView = 'edit';
-        $this->activeEditTab = 'levels';
     }
 
-    public function backToList()
+    public function editRevision($revisionId)
     {
-        $this->currentView = 'list';
-        $this->editingPlan = null;
-        $this->editingRevision = null;
-        $this->activeEditTab = 'levels';
+        $revision = ServicePlanRevision::find($revisionId);
+
+        if (!$revision) {
+            Flux::toast('Revision not found.', variant: 'danger');
+            return;
+        }
+
+        return redirect()->route('app.company.service.plans.edit.revision', [
+            'company' => $this->company,
+            'plan' => $revision->servicePlan,
+            'revision' => $revision
+        ]);
     }
 
     public function duplicatePlan($planId)
@@ -404,11 +410,6 @@ class ServicePlansNew extends Component
     public function archivePlan($planId)
     {
         Flux::toast('Archive plan functionality coming soon.', variant: 'info');
-    }
-
-    public function editRevision($revisionId)
-    {
-        Flux::toast('Edit revision functionality coming soon.', variant: 'info');
     }
 
     public function archiveRevision($revisionId)
@@ -491,31 +492,9 @@ class ServicePlansNew extends Component
             ->ordered()
             ->get();
 
-        // Data for edit view
-        $editingPlanData = null;
-        $editingRevisionData = null;
-
-        if ($this->currentView === 'edit' && $this->editingPlan) {
-            $editingPlanData = ServicePlanNew::with([
-                'revisions' => function($query) {
-                    $query->orderBy('version_number', 'desc');
-                }
-            ])->find($this->editingPlan);
-
-            if ($this->editingRevision) {
-                $editingRevisionData = ServicePlanRevision::with([
-                    'levels' => function($query) {
-                        $query->active()->ordered();
-                    }
-                ])->find($this->editingRevision);
-            }
-        }
-
         return view('livewire.company.service-plans-new', compact(
             'servicePlans',
-            'featureGroups',
-            'editingPlanData',
-            'editingRevisionData'
+            'featureGroups'
         ));
     }
 }
