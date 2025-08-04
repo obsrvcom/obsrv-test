@@ -123,7 +123,7 @@ class ServicePlanEdit extends Component
         $this->resetRevisionForm();
 
         // Navigate to the new revision
-        return redirect()->route('app.company.service.plans.edit.revision', [
+        return redirect()->route('company.service.plans.edit.revision', [
             'company' => $this->company,
             'plan' => $this->plan,
             'revision' => $revision

@@ -28,6 +28,8 @@ class ServicePlansNew extends Component
     public $revisionToDelete = null;
     public $planToDelete = null;
 
+
+
     // Modal states
     public $showCreatePlanModal = false;
     public $showEditPlanModal = false;
@@ -36,8 +38,7 @@ class ServicePlansNew extends Component
     public $showEditRevisionModal = false;
     public $showDeleteRevisionModal = false;
     public $showCreateLevelModal = false;
-    public $showCreateFeatureGroupModal = false;
-    public $showCreateFeatureModal = false;
+
     public $showManageLevelFeaturesModal = false;
     public $showPublishRevisionModal = false;
 
@@ -78,23 +79,7 @@ class ServicePlansNew extends Component
         'color' => '#3B82F6',
     ];
 
-    public $featureGroupForm = [
-        'name' => '',
-        'description' => '',
-        'is_active' => true,
-        'color' => '#3B82F6',
-    ];
 
-    public $featureForm = [
-        'feature_group_id' => null,
-        'name' => '',
-        'description' => '',
-        'data_type' => 'boolean',
-        'options' => [],
-        'is_active' => true,
-        'affects_sla' => false,
-        'unit' => '',
-    ];
 
     // For managing level features
     public $selectedLevelForFeatures = null;
@@ -117,6 +102,8 @@ class ServicePlansNew extends Component
             }
         }
     }
+
+
 
     // Plan Management
     public function createPlan()
@@ -197,49 +184,7 @@ class ServicePlansNew extends Component
         Flux::toast('Level created successfully!', variant: 'success');
     }
 
-    // Feature Group Management
-    public function createFeatureGroup()
-    {
-        $this->validate([
-            'featureGroupForm.name' => 'required|string|max:255',
-            'featureGroupForm.description' => 'nullable|string',
-            'featureGroupForm.is_active' => 'boolean',
-        ]);
 
-        $featureGroup = $this->company->servicePlanFeatureGroupsNew()->create(array_merge(
-            $this->featureGroupForm,
-            ['sort_order' => $this->company->servicePlanFeatureGroupsNew()->count()]
-        ));
-
-        $this->showCreateFeatureGroupModal = false;
-        $this->resetFeatureGroupForm();
-
-        Flux::toast('Feature group created successfully!', variant: 'success');
-    }
-
-    // Feature Management
-    public function createFeature()
-    {
-        $this->validate([
-            'featureForm.feature_group_id' => 'required|exists:service_plan_feature_groups_new,id',
-            'featureForm.name' => 'required|string|max:255',
-            'featureForm.description' => 'nullable|string',
-            'featureForm.data_type' => 'required|in:boolean,text,number,currency,time,select',
-            'featureForm.is_active' => 'boolean',
-            'featureForm.affects_sla' => 'boolean',
-        ]);
-
-        $featureGroup = ServicePlanFeatureGroupNew::find($this->featureForm['feature_group_id']);
-        $feature = $featureGroup->features()->create(array_merge(
-            $this->featureForm,
-            ['sort_order' => $featureGroup->features()->count()]
-        ));
-
-        $this->showCreateFeatureModal = false;
-        $this->resetFeatureForm();
-
-        Flux::toast('Feature created successfully!', variant: 'success');
-    }
 
     // Publishing
     public function publishRevision($revisionId)
@@ -433,20 +378,7 @@ class ServicePlansNew extends Component
         $this->showCreateLevelModal = true;
     }
 
-    public function openCreateFeatureGroupModal()
-    {
-        $this->resetFeatureGroupForm();
-        $this->showCreateFeatureGroupModal = true;
-    }
 
-    public function openCreateFeatureModal($featureGroupId = null)
-    {
-        $this->resetFeatureForm();
-        if ($featureGroupId) {
-            $this->featureForm['feature_group_id'] = $featureGroupId;
-        }
-        $this->showCreateFeatureModal = true;
-    }
 
     public function openEditRevisionModal($revisionId)
     {
@@ -537,29 +469,7 @@ class ServicePlansNew extends Component
         ];
     }
 
-    private function resetFeatureGroupForm()
-    {
-        $this->featureGroupForm = [
-            'name' => '',
-            'description' => '',
-            'is_active' => true,
-            'color' => '#3B82F6',
-        ];
-    }
 
-    private function resetFeatureForm()
-    {
-        $this->featureForm = [
-            'feature_group_id' => null,
-            'name' => '',
-            'description' => '',
-            'data_type' => 'boolean',
-            'options' => [],
-            'is_active' => true,
-            'affects_sla' => false,
-            'unit' => '',
-        ];
-    }
 
     // Selection Methods
     public function selectPlan($planId)
@@ -650,41 +560,7 @@ class ServicePlansNew extends Component
         Flux::toast('Manage level features functionality coming soon.', variant: 'info');
     }
 
-    public function editFeatureGroup($featureGroupId)
-    {
-        Flux::toast('Edit feature group functionality coming soon.', variant: 'info');
-    }
 
-    public function editFeature($featureId)
-    {
-        Flux::toast('Edit feature functionality coming soon.', variant: 'info');
-    }
-
-    // Additional placeholder methods
-    public function deactivateFeatureGroup($featureGroupId)
-    {
-        Flux::toast('Deactivate feature group functionality coming soon.', variant: 'info');
-    }
-
-    public function activateFeatureGroup($featureGroupId)
-    {
-        Flux::toast('Activate feature group functionality coming soon.', variant: 'info');
-    }
-
-    public function deactivateFeature($featureId)
-    {
-        Flux::toast('Deactivate feature functionality coming soon.', variant: 'info');
-    }
-
-    public function activateFeature($featureId)
-    {
-        Flux::toast('Activate feature functionality coming soon.', variant: 'info');
-    }
-
-    public function manageFeatureOptions($featureId)
-    {
-        Flux::toast('Manage feature options functionality coming soon.', variant: 'info');
-    }
 
     public function deleteLevel($levelId)
     {
@@ -706,17 +582,8 @@ class ServicePlansNew extends Component
             ->ordered()
             ->get();
 
-        $featureGroups = $this->company->servicePlanFeatureGroupsNew()
-            ->with(['features' => function($query) {
-                $query->active()->ordered();
-            }])
-            ->active()
-            ->ordered()
-            ->get();
-
         return view('livewire.company.service-plans-new', compact(
-            'servicePlans',
-            'featureGroups'
+            'servicePlans'
         ))->with([
             'editingRevisionData' => $this->editingRevisionData,
             'revisionToDelete' => $this->revisionToDelete,

@@ -92,6 +92,7 @@ Route::prefix('app')->middleware(['auth'])->group(function () {
         Route::get('teams', \App\Livewire\Company\Teams::class)->name('teams');
         Route::get('users', \App\Livewire\Company\Users::class)->name('users');
         Route::get('service', \App\Livewire\Company\ServicePlansNew::class)->name('service');
+        Route::get('service/features', \App\Livewire\Company\ServicePlanFeatures::class)->name('service.features');
         Route::get('service/plans/{plan}', \App\Livewire\Company\ServicePlanEdit::class)->name('service.plans.edit');
         Route::get('service/plans/{plan}/revisions/{revision}', \App\Livewire\Company\ServicePlanEdit::class)->name('service.plans.edit.revision');
         Volt::route('billing', 'app.company.billing')->name('billing');

@@ -3,7 +3,7 @@
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6">
         <div class="flex items-center justify-between mb-6">
             <div class="flex items-center gap-3">
-                <flux:button size="sm" variant="ghost" href="{{ route('app.company.service', $company) }}">
+                <flux:button size="sm" variant="ghost" href="{{ route('company.service', $company) }}">
                     <flux:icon name="arrow-left" class="size-4" />
                     Back to Service Plans
                 </flux:button>
@@ -64,7 +64,7 @@
                                 {{ $revisionData && $rev->id === $revisionData->id
                                     ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-300'
                                     : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700' }}">
-                                <a href="{{ route('app.company.service.plans.edit.revision', ['company' => $company, 'plan' => $planData, 'revision' => $rev]) }}"
+                                <a href="{{ route('company.service.plans.edit.revision', ['company' => $company, 'plan' => $planData, 'revision' => $rev]) }}"
                                    class="flex items-center gap-2">
                                     {{ $rev->name }}
                                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium
