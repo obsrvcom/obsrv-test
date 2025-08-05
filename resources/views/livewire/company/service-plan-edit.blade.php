@@ -46,9 +46,9 @@
                     <flux:icon name="document-duplicate" class="size-4" />
                     New Revision
                 </flux:button>
-                <flux:button size="sm" variant="ghost" wire:click="openCreateFeatureGroupModal">
-                    <flux:icon name="squares-2x2" class="size-4" />
-                    New Feature Group
+                <flux:button size="sm" variant="ghost" href="{{ route('company.service.features', $company) }}">
+                    <flux:icon name="cog-6-tooth" class="size-4" />
+                    Manage Features
                 </flux:button>
             </div>
         </div>
@@ -98,35 +98,12 @@
             </div>
         @endif
 
-        <!-- Tabs -->
-        <div class="border-b border-gray-200 dark:border-gray-700">
-            <nav class="-mb-px flex space-x-8">
-                <button wire:click="$set('activeTab', 'levels')"
-                        class="py-2 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'levels' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                    Levels
-                </button>
-                <button wire:click="$set('activeTab', 'features')"
-                        class="py-2 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'features' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                    Feature Groups
-                </button>
-                <button wire:click="$set('activeTab', 'comparison')"
-                        class="py-2 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'comparison' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                    Comparison Grid
-                </button>
-            </nav>
-        </div>
     </div>
 
-    <!-- Content -->
+    <!-- Grid Configuration Content -->
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-neutral-200 dark:border-neutral-700 flex-1 overflow-hidden">
         <div class="h-full overflow-y-auto p-6">
-            @if($activeTab === 'levels')
-                @include('livewire.company.service-plan-edit.levels', ['editingRevisionData' => $revisionData])
-            @elseif($activeTab === 'features')
-                @include('livewire.company.service-plan-edit.features')
-            @elseif($activeTab === 'comparison')
-                @include('livewire.company.service-plan-edit.comparison', ['editingRevisionData' => $revisionData, 'editingPlanData' => $planData])
-            @endif
+            @include('livewire.company.service-plan-edit.grid', ['revisionData' => $revisionData, 'planData' => $planData])
         </div>
     </div>
 

@@ -169,6 +169,68 @@
     </div>
 </flux:modal>
 
+<!-- Edit Level Modal -->
+<flux:modal variant="flyout" wire:model.self="showEditLevelModal" class="md:w-[600px]">
+    <div class="space-y-6">
+        <div>
+            <flux:heading size="lg">Edit Level</flux:heading>
+            <flux:text class="mt-2">Update the level details.</flux:text>
+        </div>
+
+        <form wire:submit="updateLevel" class="space-y-6">
+            <flux:input label="Level Name" wire:model="editLevelForm.name" placeholder="e.g., Level 1, Basic, Premium" required />
+            @error('editLevelForm.name')
+                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+            @enderror
+
+            <flux:textarea label="Description" wire:model="editLevelForm.description" placeholder="Optional description of this level..." rows="3" />
+            @error('editLevelForm.description')
+                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+            @enderror
+
+            <div class="grid grid-cols-2 gap-4">
+                <flux:input label="Monthly Price" wire:model="editLevelForm.monthly_price" type="number" step="0.01" min="0" placeholder="0.00" />
+                @error('editLevelForm.monthly_price')
+                    <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                @enderror
+
+                <flux:input label="Quarterly Price" wire:model="editLevelForm.quarterly_price" type="number" step="0.01" min="0" placeholder="0.00" />
+                @error('editLevelForm.quarterly_price')
+                    <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <flux:input label="Annual Price" wire:model="editLevelForm.annual_price" type="number" step="0.01" min="0" placeholder="0.00" />
+                @error('editLevelForm.annual_price')
+                    <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                @enderror
+
+                <flux:input label="Min Contract (months)" wire:model="editLevelForm.minimum_contract_months" type="number" min="1" placeholder="12" />
+                @error('editLevelForm.minimum_contract_months')
+                    <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <flux:input label="Color" wire:model="editLevelForm.color" type="color" />
+
+            <div class="space-y-3">
+                <flux:checkbox wire:model="editLevelForm.is_active" label="Active" />
+                <flux:text size="sm" class="text-gray-600">Active levels are visible to customers.</flux:text>
+
+                <flux:checkbox wire:model="editLevelForm.is_featured" label="Featured" />
+                <flux:text size="sm" class="text-gray-600">Featured levels are highlighted in comparisons.</flux:text>
+            </div>
+
+            <div class="flex">
+                <flux:spacer />
+                <flux:button variant="ghost" type="button" wire:click="$set('showEditLevelModal', false)">Cancel</flux:button>
+                <flux:button variant="primary" type="submit">Update Level</flux:button>
+            </div>
+        </form>
+    </div>
+</flux:modal>
+
 <!-- Create Feature Modal -->
 <flux:modal variant="flyout" wire:model.self="showCreateFeatureModal" class="md:w-[500px]">
     <div class="space-y-6">

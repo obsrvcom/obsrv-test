@@ -8,6 +8,7 @@ use App\Models\ServicePlanRevision;
 use App\Models\ServicePlanLevel;
 use App\Models\ServicePlanFeatureGroupNew;
 use App\Models\ServicePlanFeatureNew;
+use App\Models\ServicePlanLevelFeatureValue;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Flux\Flux;
@@ -18,8 +19,10 @@ class ServicePlanEdit extends Component
     public ServicePlanNew $plan;
     public ?ServicePlanRevision $revision = null;
 
-    // For the edit view tabs
-    public $activeTab = 'levels';
+    // Grid editing state
+    public $editingCell = null; // Format: "level_id:feature_id"
+    public $cellValue = '';
+    public $cellIncluded = false;
 
     // Selected items for navigation
     public $selectedLevel = null;
@@ -28,6 +31,7 @@ class ServicePlanEdit extends Component
     public $showCreateRevisionModal = false;
     public $showEditRevisionModal = false;
     public $showCreateLevelModal = false;
+    public $showEditLevelModal = false;
     public $showCreateFeatureGroupModal = false;
     public $showCreateFeatureModal = false;
 
@@ -370,9 +374,96 @@ class ServicePlanEdit extends Component
         Flux::toast('Archive revision functionality coming soon.', variant: 'info');
     }
 
+    // Modal states for level editing
+    public $showEditLevelModal = false;
+    public $editLevelForm = [
+        'id' => null,
+        'name' => '',
+        'description' => '',
+        'monthly_price' => null,
+        'quarterly_price' => null,
+        'annual_price' => null,
+        'minimum_contract_months' => null,
+        'is_active' => true,
+        'is_featured' => false,
+        'color' => '#3B82F6',
+    ];
+
     public function editLevel($levelId)
     {
-        Flux::toast('Edit level functionality coming soon.', variant: 'info');
+        $level = ServicePlanLevel::find($levelId);
+
+        if (!$level || !$this->revision || $level->service_plan_revision_id !== $this->revision->id) {
+            Flux::toast('Level not found or invalid.', variant: 'danger');
+            return;
+        }
+
+        $this->editLevelForm = [
+            'id' => $level->id,
+            'name' => $level->name,
+            'description' => $level->description ?? '',
+            'monthly_price' => $level->monthly_price,
+            'quarterly_price' => $level->quarterly_price,
+            'annual_price' => $level->annual_price,
+            'minimum_contract_months' => $level->minimum_contract_months,
+            'is_active' => $level->is_active,
+            'is_featured' => $level->is_featured,
+            'color' => $level->color ?? '#3B82F6',
+        ];
+
+        $this->showEditLevelModal = true;
+    }
+
+    public function updateLevel()
+    {
+        $this->validate([
+            'editLevelForm.name' => 'required|string|max:255',
+            'editLevelForm.description' => 'nullable|string',
+            'editLevelForm.monthly_price' => 'nullable|numeric|min:0',
+            'editLevelForm.quarterly_price' => 'nullable|numeric|min:0',
+            'editLevelForm.annual_price' => 'nullable|numeric|min:0',
+            'editLevelForm.minimum_contract_months' => 'nullable|integer|min:1',
+        ]);
+
+        $level = ServicePlanLevel::find($this->editLevelForm['id']);
+
+        if (!$level || !$this->revision || $level->service_plan_revision_id !== $this->revision->id) {
+            Flux::toast('Level not found or invalid.', variant: 'danger');
+            return;
+        }
+
+        $level->update([
+            'name' => $this->editLevelForm['name'],
+            'description' => $this->editLevelForm['description'],
+            'monthly_price' => $this->editLevelForm['monthly_price'],
+            'quarterly_price' => $this->editLevelForm['quarterly_price'],
+            'annual_price' => $this->editLevelForm['annual_price'],
+            'minimum_contract_months' => $this->editLevelForm['minimum_contract_months'],
+            'is_active' => $this->editLevelForm['is_active'],
+            'is_featured' => $this->editLevelForm['is_featured'],
+            'color' => $this->editLevelForm['color'],
+        ]);
+
+        $this->showEditLevelModal = false;
+        $this->resetEditLevelForm();
+
+        Flux::toast('Level updated successfully!', variant: 'success');
+    }
+
+    public function resetEditLevelForm()
+    {
+        $this->editLevelForm = [
+            'id' => null,
+            'name' => '',
+            'description' => '',
+            'monthly_price' => null,
+            'quarterly_price' => null,
+            'annual_price' => null,
+            'minimum_contract_months' => null,
+            'is_active' => true,
+            'is_featured' => false,
+            'color' => '#3B82F6',
+        ];
     }
 
     public function deleteLevel($levelId)
@@ -395,9 +486,87 @@ class ServicePlanEdit extends Component
         Flux::toast('Edit feature functionality coming soon.', variant: 'info');
     }
 
-    public function editFeatureValue($levelId, $featureId)
+    // Grid editing functionality
+    public function startEditingCell($levelId, $featureId)
     {
-        Flux::toast('Edit feature value functionality coming soon.', variant: 'info');
+        $this->editingCell = $levelId . ':' . $featureId;
+
+        // Load current value
+        $featureValue = ServicePlanLevelFeatureValue::where('service_plan_level_id', $levelId)
+            ->where('feature_id', $featureId)
+            ->first();
+
+        if ($featureValue) {
+            $this->cellValue = $featureValue->value ?? '';
+            $this->cellIncluded = $featureValue->is_included;
+        } else {
+            $this->cellValue = '';
+            $this->cellIncluded = false;
+        }
+    }
+
+    public function saveCellValue()
+    {
+        if (!$this->editingCell) {
+            return;
+        }
+
+        [$levelId, $featureId] = explode(':', $this->editingCell);
+
+        $level = ServicePlanLevel::find($levelId);
+        $feature = ServicePlanFeatureNew::find($featureId);
+
+        if (!$level || !$feature) {
+            Flux::toast('Invalid level or feature.', variant: 'danger');
+            return;
+        }
+
+        // Validate that level belongs to current plan revision
+        if (!$this->revision || $level->service_plan_revision_id !== $this->revision->id) {
+            Flux::toast('Level does not belong to current revision.', variant: 'danger');
+            return;
+        }
+
+        // Find or create feature value
+        $featureValue = ServicePlanLevelFeatureValue::updateOrCreate(
+            [
+                'service_plan_level_id' => $levelId,
+                'feature_id' => $featureId,
+            ],
+            [
+                'value' => $feature->isBoolean() ? null : $this->cellValue,
+                'is_included' => $feature->isBoolean() ? $this->cellIncluded : !empty($this->cellValue),
+                'display_value' => null, // Let the model handle formatting
+            ]
+        );
+
+        $this->editingCell = null;
+        $this->cellValue = '';
+        $this->cellIncluded = false;
+
+        Flux::toast('Feature value updated successfully!', variant: 'success');
+    }
+
+    public function cancelCellEdit()
+    {
+        $this->editingCell = null;
+        $this->cellValue = '';
+        $this->cellIncluded = false;
+    }
+
+    public function deleteLevelFromGrid($levelId)
+    {
+        $level = ServicePlanLevel::find($levelId);
+
+        if (!$level || !$this->revision || $level->service_plan_revision_id !== $this->revision->id) {
+            Flux::toast('Level not found or invalid.', variant: 'danger');
+            return;
+        }
+
+        $levelName = $level->name;
+        $level->delete();
+
+        Flux::toast("Level '{$levelName}' deleted successfully.", variant: 'success');
     }
 
     #[Layout('components.layouts.company')]

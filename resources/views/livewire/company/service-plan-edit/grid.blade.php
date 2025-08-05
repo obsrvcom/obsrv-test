@@ -1,0 +1,282 @@
+<!-- Comprehensive Grid-based Service Plan Configuration -->
+@if($revisionData && $revisionData->levels->count() > 0)
+    <div class="space-y-6">
+        <!-- Level Management Header -->
+        <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Service Plan Configuration</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Configure features across all levels in a single grid</p>
+            </div>
+            <div class="flex gap-2">
+                <flux:button size="sm" variant="ghost" wire:click="openCreateLevelModal({{ $revisionData->id }})">
+                    <flux:icon name="plus" class="size-4" />
+                    Add Level
+                </flux:button>
+                <flux:button size="sm" variant="ghost" wire:click="openCreateFeatureGroupModal">
+                    <flux:icon name="squares-2x2" class="size-4" />
+                    Add Feature Group
+                </flux:button>
+            </div>
+        </div>
+
+        <!-- Configuration Grid -->
+        <div class="overflow-x-auto">
+            <div class="min-w-full">
+                <!-- Level Headers Row -->
+                <div class="sticky top-0 bg-white dark:bg-gray-800 z-10 border-b border-gray-200 dark:border-gray-700">
+                    <div class="grid gap-4 p-4" style="grid-template-columns: 300px repeat({{ $revisionData->levels->count() }}, minmax(200px, 1fr));">
+                        <!-- Feature column header -->
+                        <div class="font-semibold text-gray-900 dark:text-white">
+                            Features
+                        </div>
+
+                        <!-- Level headers -->
+                        @foreach($revisionData->levels as $level)
+                            <div class="text-center border rounded-lg p-4 {{ $level->is_featured ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700' }}">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h4 class="font-bold text-lg" style="color: {{ $level->color }}">
+                                        {{ $level->name }}
+                                    </h4>
+                                    <flux:dropdown>
+                                        <flux:button size="xs" variant="ghost" icon="ellipsis-horizontal" />
+                                        <flux:menu>
+                                            <flux:menu.item icon="pencil" wire:click="editLevel({{ $level->id }})">
+                                                Edit Level
+                                            </flux:menu.item>
+                                            <flux:menu.separator />
+                                            <flux:menu.item icon="trash" variant="danger" wire:click="deleteLevelFromGrid({{ $level->id }})">
+                                                Delete Level
+                                            </flux:menu.item>
+                                        </flux:menu>
+                                    </flux:dropdown>
+                                </div>
+
+                                @if($level->monthly_price)
+                                    <div class="text-xl font-bold text-gray-900 dark:text-white">
+                                        £{{ number_format($level->monthly_price, 2) }}
+                                        <span class="text-sm text-gray-500">/month</span>
+                                    </div>
+                                @endif
+
+                                @if($level->is_featured)
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-300 mt-2">
+                                        Featured
+                                    </span>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Feature Groups and Rows -->
+                @foreach($featureGroups as $featureGroup)
+                    @if($featureGroup->activeFeatures->count() > 0)
+                        <!-- Feature Group Header -->
+                        <div class="bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                            <div class="grid gap-4 p-3" style="grid-template-columns: 300px repeat({{ $revisionData->levels->count() }}, minmax(200px, 1fr));">
+                                <div class="col-span-full flex items-center justify-between">
+                                    <div>
+                                        <h5 class="font-semibold text-gray-900 dark:text-white" style="color: {{ $featureGroup->color }}">
+                                            {{ $featureGroup->name }}
+                                        </h5>
+                                        @if($featureGroup->description)
+                                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                                {{ $featureGroup->description }}
+                                            </p>
+                                        @endif
+                                    </div>
+                                    <flux:button size="xs" variant="ghost" wire:click="editFeatureGroup({{ $featureGroup->id }})">
+                                        <flux:icon name="pencil" class="size-3" />
+                                        Edit Group
+                                    </flux:button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feature Rows -->
+                        @foreach($featureGroup->activeFeatures as $feature)
+                            <div class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                <div class="grid gap-4 p-4" style="grid-template-columns: 300px repeat({{ $revisionData->levels->count() }}, minmax(200px, 1fr));">
+                                    <!-- Feature name column -->
+                                    <div class="flex items-center">
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-medium text-gray-900 dark:text-white">
+                                                    {{ $feature->name }}
+                                                </span>
+                                                @if($feature->affects_sla)
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-800 dark:text-orange-300">
+                                                        SLA
+                                                    </span>
+                                                @endif
+                                                <flux:button size="xs" variant="ghost" wire:click="editFeature({{ $feature->id }})">
+                                                    <flux:icon name="pencil" class="size-3" />
+                                                </flux:button>
+                                            </div>
+                                            @if($feature->description)
+                                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                                    {{ $feature->description }}
+                                                </p>
+                                            @endif
+                                            @if($feature->unit)
+                                                <p class="text-xs text-gray-400">Unit: {{ $feature->unit }}</p>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    <!-- Feature value cells for each level -->
+                                    @foreach($revisionData->levels as $level)
+                                        <div class="flex items-center justify-center">
+                                            @php
+                                                $featureValue = $level->featureValues()
+                                                    ->where('feature_id', $feature->id)
+                                                    ->first();
+                                                $cellId = $level->id . ':' . $feature->id;
+                                                $isEditing = $editingCell === $cellId;
+                                            @endphp
+
+                                            @if($isEditing)
+                                                <!-- Editing mode -->
+                                                <div class="w-full">
+                                                    @if($feature->isBoolean())
+                                                        <!-- Boolean toggle -->
+                                                        <div class="flex items-center gap-2">
+                                                            <flux:checkbox wire:model="cellIncluded" />
+                                                            <div class="flex gap-1">
+                                                                <flux:button size="xs" variant="ghost" wire:click="saveCellValue">
+                                                                    <flux:icon name="check" class="size-3 text-green-600" />
+                                                                </flux:button>
+                                                                <flux:button size="xs" variant="ghost" wire:click="cancelCellEdit">
+                                                                    <flux:icon name="x-mark" class="size-3 text-red-600" />
+                                                                </flux:button>
+                                                            </div>
+                                                        </div>
+                                                    @elseif($feature->isSelect())
+                                                        <!-- Select dropdown -->
+                                                        <div class="flex items-center gap-1">
+                                                            <flux:select wire:model="cellValue" size="sm" class="min-w-0 flex-1">
+                                                                <option value="">Select...</option>
+                                                                @foreach($feature->getSelectOptions() as $option)
+                                                                    <option value="{{ $option }}">{{ $option }}</option>
+                                                                @endforeach
+                                                            </flux:select>
+                                                            <div class="flex gap-1">
+                                                                <flux:button size="xs" variant="ghost" wire:click="saveCellValue">
+                                                                    <flux:icon name="check" class="size-3 text-green-600" />
+                                                                </flux:button>
+                                                                <flux:button size="xs" variant="ghost" wire:click="cancelCellEdit">
+                                                                    <flux:icon name="x-mark" class="size-3 text-red-600" />
+                                                                </flux:button>
+                                                            </div>
+                                                        </div>
+                                                    @else
+                                                        <!-- Text/Number input -->
+                                                        <div class="flex items-center gap-1">
+                                                            <flux:input
+                                                                wire:model="cellValue"
+                                                                size="sm"
+                                                                type="{{ $feature->isNumber() || $feature->isCurrency() ? 'number' : 'text' }}"
+                                                                step="{{ $feature->isCurrency() ? '0.01' : '1' }}"
+                                                                class="min-w-0 flex-1"
+                                                                wire:keydown.enter="saveCellValue"
+                                                                wire:keydown.escape="cancelCellEdit"
+                                                            />
+                                                            <div class="flex gap-1">
+                                                                <flux:button size="xs" variant="ghost" wire:click="saveCellValue">
+                                                                    <flux:icon name="check" class="size-3 text-green-600" />
+                                                                </flux:button>
+                                                                <flux:button size="xs" variant="ghost" wire:click="cancelCellEdit">
+                                                                    <flux:icon name="x-mark" class="size-3 text-red-600" />
+                                                                </flux:button>
+                                                            </div>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            @else
+                                                <!-- Display mode -->
+                                                <div class="flex items-center justify-center text-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded p-2 w-full"
+                                                     wire:click="startEditingCell({{ $level->id }}, {{ $feature->id }})">
+                                                    @if($featureValue)
+                                                        <span class="font-medium">
+                                                            {{ $featureValue->formatted_value }}
+                                                        </span>
+                                                    @elseif($feature->isBoolean())
+                                                        <span class="text-gray-400">✗</span>
+                                                    @else
+                                                        <span class="text-gray-400">-</span>
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endforeach
+                    @endif
+                @endforeach
+
+                @if($featureGroups->count() === 0)
+                    <div class="text-center py-12 border-t border-gray-200 dark:border-gray-700">
+                        <flux:icon name="squares-2x2" class="mx-auto h-12 w-12 text-gray-400" />
+                        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No feature groups yet</h3>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            Create feature groups to start configuring your service plan.
+                        </p>
+                        <div class="mt-6">
+                            <flux:button size="sm" wire:click="openCreateFeatureGroupModal">
+                                <flux:icon name="plus" class="size-4" />
+                                Create Feature Group
+                            </flux:button>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- Usage Instructions -->
+        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div class="flex items-start gap-3">
+                <flux:icon name="information-circle" class="size-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                <div>
+                    <h4 class="text-sm font-medium text-blue-900 dark:text-blue-300">How to use the grid</h4>
+                    <ul class="mt-2 text-sm text-blue-800 dark:text-blue-400 space-y-1">
+                        <li>• Click any cell to edit feature values for that level</li>
+                        <li>• Use checkboxes for yes/no features</li>
+                        <li>• Enter specific values for pricing, time, or custom features</li>
+                        <li>• Press Enter to save or Escape to cancel when editing</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+@elseif($revisionData)
+    <!-- No levels in selected revision -->
+    <div class="text-center py-12">
+        <flux:icon name="clipboard-document-list" class="mx-auto h-12 w-12 text-gray-400" />
+        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No levels found</h3>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Add levels to this revision to start configuring features.
+        </p>
+        <div class="mt-6">
+            <flux:button size="sm" wire:click="openCreateLevelModal({{ $revisionData->id }})">
+                <flux:icon name="plus" class="size-4" />
+                Add Level
+            </flux:button>
+        </div>
+    </div>
+@else
+    <!-- No revision available -->
+    <div class="text-center py-12">
+        <flux:icon name="document-text" class="mx-auto h-12 w-12 text-gray-400" />
+        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No revision available</h3>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Create a revision first to configure its features.
+        </p>
+        <div class="mt-6">
+            <flux:button size="sm" wire:click="openCreateRevisionModal">
+                <flux:icon name="plus" class="size-4" />
+                Create Revision
+            </flux:button>
+        </div>
+    </div>
+@endif
