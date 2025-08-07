@@ -30,11 +30,49 @@ class ServicePlanLevel extends Model
         'is_active' => 'boolean',
         'is_featured' => 'boolean',
         'sort_order' => 'integer',
-        'monthly_price' => 'decimal:2',
-        'quarterly_price' => 'decimal:2',
-        'annual_price' => 'decimal:2',
-        'minimum_contract_months' => 'integer',
     ];
+
+    // Mutators to handle empty strings for price fields
+    public function setMonthlyPriceAttribute($value)
+    {
+        $this->attributes['monthly_price'] = $value === '' || $value === null ? null : $value;
+    }
+
+    public function setQuarterlyPriceAttribute($value)
+    {
+        $this->attributes['quarterly_price'] = $value === '' || $value === null ? null : $value;
+    }
+
+    public function setAnnualPriceAttribute($value)
+    {
+        $this->attributes['annual_price'] = $value === '' || $value === null ? null : $value;
+    }
+
+    public function setMinimumContractMonthsAttribute($value)
+    {
+        $this->attributes['minimum_contract_months'] = $value === '' || $value === null ? null : $value;
+    }
+
+    // Accessors to handle existing empty strings in database
+    public function getMonthlyPriceAttribute($value)
+    {
+        return $value === '' || $value === null ? null : (float)$value;
+    }
+
+    public function getQuarterlyPriceAttribute($value)
+    {
+        return $value === '' || $value === null ? null : (float)$value;
+    }
+
+    public function getAnnualPriceAttribute($value)
+    {
+        return $value === '' || $value === null ? null : (float)$value;
+    }
+
+    public function getMinimumContractMonthsAttribute($value)
+    {
+        return $value === '' || $value === null ? null : (int)$value;
+    }
 
     // Relationships
     public function revision(): BelongsTo

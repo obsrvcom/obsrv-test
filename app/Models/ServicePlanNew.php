@@ -15,6 +15,7 @@ class ServicePlanNew extends Model
 
     protected $fillable = [
         'company_id',
+        'category_id',
         'name',
         'description',
         'is_active',
@@ -31,6 +32,11 @@ class ServicePlanNew extends Model
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(PlanCategory::class);
     }
 
     public function revisions(): HasMany

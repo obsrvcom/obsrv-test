@@ -91,10 +91,12 @@ Route::prefix('app')->middleware(['auth'])->group(function () {
         Volt::route('monitoring', 'app.company.monitoring')->name('monitoring');
         Route::get('teams', \App\Livewire\Company\Teams::class)->name('teams');
         Route::get('users', \App\Livewire\Company\Users::class)->name('users');
-        Route::get('service', \App\Livewire\Company\ServicePlansNew::class)->name('service');
-        Route::get('service/features', \App\Livewire\Company\ServicePlanFeatures::class)->name('service.features');
-        Route::get('service/plans/{plan}', \App\Livewire\Company\ServicePlanEdit::class)->name('service.plans.edit');
-        Route::get('service/plans/{plan}/revisions/{revision}', \App\Livewire\Company\ServicePlanEdit::class)->name('service.plans.edit.revision');
+        // Plan management routes
+        Route::get('plans', \App\Livewire\Company\PlanCategories::class)->name('plans');
+        Route::get('plans/categories/{category}', \App\Livewire\Company\PlansCategory::class)->name('plans.category');
+        Route::get('plans/categories/{category}/features', \App\Livewire\Company\CategoryFeatures::class)->name('features.category');
+        Route::get('plans/{plan}', \App\Livewire\Company\PlanEdit::class)->name('plans.edit');
+        Route::get('plans/{plan}/revisions/{revision}', \App\Livewire\Company\PlanEdit::class)->name('plans.edit.revision');
         Volt::route('billing', 'app.company.billing')->name('billing');
         // Company settings routes - require admin access for modifications
         Route::redirect('settings', 'settings/profile'); // Redirect to profile

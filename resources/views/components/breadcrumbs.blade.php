@@ -37,7 +37,28 @@
                 $routeName === 'company.monitoring' => ['label' => 'Monitoring', 'url' => null],
                 $routeName === 'company.teams' => ['label' => 'Teams', 'url' => null],
                 $routeName === 'company.users' => ['label' => 'Users', 'url' => null],
-                $routeName === 'company.service' => ['label' => 'Service Plans', 'url' => null],
+                $routeName === 'company.plans' => ['label' => 'Plans', 'url' => null],
+                str_starts_with($routeName, 'company.plans.category') => [
+                    'label' => 'Plans',
+                    'url' => route('company.plans', $company),
+                    'children' => [
+                        ['label' => $route->parameter('category')?->name . ' Plans' ?? 'Category Plans', 'url' => null]
+                    ]
+                ],
+                str_starts_with($routeName, 'company.features.category') => [
+                    'label' => 'Plans',
+                    'url' => route('company.plans', $company),
+                    'children' => [
+                        ['label' => $route->parameter('category')?->name . ' Features' ?? 'Category Features', 'url' => null]
+                    ]
+                ],
+                str_starts_with($routeName, 'company.plans.edit') => [
+                    'label' => 'Plans',
+                    'url' => route('company.plans', $company),
+                    'children' => [
+                        ['label' => $route->parameter('plan')?->name ?? 'Plan', 'url' => null]
+                    ]
+                ],
                 $routeName === 'company.billing' => ['label' => 'Billing', 'url' => null],
                 str_starts_with($routeName, 'company.settings') => [
                     'label' => 'Settings',

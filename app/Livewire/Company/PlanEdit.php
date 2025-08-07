@@ -13,7 +13,7 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Flux\Flux;
 
-class ServicePlanEdit extends Component
+class PlanEdit extends Component
 {
     public Company $company;
     public ServicePlanNew $plan;
@@ -128,7 +128,7 @@ class ServicePlanEdit extends Component
         $this->resetRevisionForm();
 
         // Navigate to the new revision
-        return redirect()->route('company.service.plans.edit.revision', [
+        return redirect()->route('company.plans.edit.revision', [
             'company' => $this->company,
             'plan' => $this->plan,
             'revision' => $revision
@@ -666,13 +666,17 @@ class ServicePlanEdit extends Component
     #[Layout('components.layouts.company')]
     public function render()
     {
-        $featureGroups = $this->company->servicePlanFeatureGroupsNew()
-            ->with(['features' => function($query) {
-                $query->active()->ordered();
-            }])
-            ->active()
-            ->ordered()
-            ->get();
+        // Get feature groups for this plan's category
+        $featureGroups = collect();
+        if ($this->plan->category) {
+            $featureGroups = $this->plan->category->featureGroups()
+                ->with(['features' => function($query) {
+                    $query->active()->ordered();
+                }])
+                ->active()
+                ->ordered()
+                ->get();
+        }
 
         // Load the plan with all its revisions
         $planData = ServicePlanNew::with([
@@ -691,7 +695,7 @@ class ServicePlanEdit extends Component
             ])->find($this->revision->id);
         }
 
-        return view('livewire.company.service-plan-edit', compact(
+        return view('livewire.company.plan-edit', compact(
             'featureGroups',
             'planData',
             'revisionData'

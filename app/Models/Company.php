@@ -71,6 +71,16 @@ class Company extends Model
         return $this->hasMany(ServicePlanFeatureGroupNew::class);
     }
 
+    public function planCategories()
+    {
+        return $this->hasMany(PlanCategory::class);
+    }
+
+    public function activePlanCategories()
+    {
+        return $this->planCategories()->where('is_active', true);
+    }
+
     public function hasUser(User $user)
     {
         return $this->users()->where('user_id', $user->id)->exists();

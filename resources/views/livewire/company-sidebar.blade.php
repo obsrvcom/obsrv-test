@@ -18,7 +18,7 @@
         <flux:navlist.group :heading="__('Company')" class="grid">
             <flux:navlist.item icon="users" :href="$company ? route('company.contacts', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.contacts') || request()->routeIs('company.contact-groups')" wire:navigate>{{ __('Contacts') }}</flux:navlist.item>
             <flux:navlist.item icon="building-office" :href="$company ? route('company.sites', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.sites') || request()->routeIs('company.site-groups')" wire:navigate>{{ __('Sites') }}</flux:navlist.item>
-            <flux:navlist.item icon="credit-card" :href="$company ? route('company.service', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.service')" wire:navigate>{{ __('Service Plans') }}</flux:navlist.item>
+            <flux:navlist.item icon="document-text" :href="$company ? route('company.plans', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.plans*')" wire:navigate>{{ __('Plans') }}</flux:navlist.item>
         </flux:navlist.group>
     </flux:navlist>
 
