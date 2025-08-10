@@ -87,7 +87,6 @@ class PlanEdit extends Component
     public function mount(ServicePlanNew $plan, ?ServicePlanRevision $revision = null)
     {
         $this->company = auth()->user()->currentCompanyFromRequest() ?? auth()->user()->currentCompany();
-
         // Ensure the plan belongs to the current company
         if ($plan->company_id !== $this->company->id) {
             abort(404);

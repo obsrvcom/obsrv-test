@@ -3,8 +3,7 @@
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <flux:button size="sm" variant="ghost" href="{{ route('company.plans.category', ['company' => $company, 'category' => $category]) }}">
-                    <flux:icon name="arrow-left" class="size-4" />
+                <flux:button size="sm" variant="ghost" icon="arrow-left" href="{{ route('company.plans.category', ['company' => $company, 'category' => $category]) }}">
                     Back to {{ $category->name }} Plans
                 </flux:button>
                 <div class="border-l border-gray-300 pl-3">
@@ -26,15 +25,37 @@
                 </div>
             </div>
             <div class="flex gap-2">
-                <flux:button size="sm" variant="ghost" wire:click="openCreateGroupModal">
-                    <flux:icon name="squares-2x2" class="size-4" />
+                <flux:button size="sm" variant="ghost" icon="squares-2x2" wire:click="openCreateGroupModal">
                     Add Feature Group
                 </flux:button>
-                <flux:button wire:click="openCreateFeatureModal" variant="primary">
-                    <flux:icon name="plus" class="size-4" />
+                <flux:button wire:click="openCreateFeatureModal" variant="primary" icon="plus">
                     Add Feature
                 </flux:button>
             </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="bg-white dark:bg-gray-800 border-b border-neutral-200 dark:border-neutral-700">
+        <div class="px-6">
+            <flux:navbar>
+                <flux:navbar.item
+                    href="{{ route('company.plans.category', ['company' => $company, 'category' => $category]) }}"
+                    :current="request()->routeIs('company.plans.category')"
+                    icon="document-text"
+                    wire:navigate
+                >
+                    Plans ({{ $category->plans_count ?? $category->plans()->count() }})
+                </flux:navbar.item>
+                <flux:navbar.item
+                    href="{{ route('company.features.category', ['company' => $company, 'category' => $category]) }}"
+                    :current="request()->routeIs('company.features.category')"
+                    icon="cog-6-tooth"
+                    wire:navigate
+                >
+                    Features ({{ $category->feature_groups_count ?? $category->featureGroups()->count() }})
+                </flux:navbar.item>
+            </flux:navbar>
         </div>
     </div>
 

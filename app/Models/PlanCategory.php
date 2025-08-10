@@ -89,7 +89,7 @@ class PlanCategory extends Model
     // Helper methods
     public function getRouteKeyName()
     {
-        return 'slug';
+        return 'id';
     }
 
     public function getTotalPlansCount(): int

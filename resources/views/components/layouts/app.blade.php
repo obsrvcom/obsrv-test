@@ -3,7 +3,7 @@
 <head>
     @include('partials.head')
 </head>
-<body class="min-h-screen bg-white dark:bg-zinc-800">
+<body class="min-h-screen dark:bg-zinc-800">
     <div class="flex flex-col h-screen">
         {{ $slot ?? '' }}
         @yield('content')

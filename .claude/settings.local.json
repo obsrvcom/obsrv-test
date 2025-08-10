@@ -5,7 +5,12 @@
       "Bash(php artisan make:migration:*)",
       "Bash(php artisan make:model:*)",
       "Bash(php artisan:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "WebFetch(domain:fluxui.dev)",
+      "Bash(php -l:*)",
+      "Bash(find:*)",
+      "Bash(rm:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": []
   }

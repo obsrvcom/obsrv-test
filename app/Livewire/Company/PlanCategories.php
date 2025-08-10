@@ -21,7 +21,6 @@ class PlanCategories extends Component
     public $createForm = [
         'name' => '',
         'description' => '',
-        'is_active' => true,
         'color' => '#3B82F6',
         'icon' => '',
     ];
@@ -30,7 +29,6 @@ class PlanCategories extends Component
         'id' => null,
         'name' => '',
         'description' => '',
-        'is_active' => true,
         'color' => '#3B82F6',
         'icon' => '',
     ];
@@ -51,7 +49,6 @@ class PlanCategories extends Component
         $this->validate([
             'createForm.name' => 'required|string|max:255',
             'createForm.description' => 'nullable|string',
-            'createForm.is_active' => 'boolean',
             'createForm.color' => 'required|string|max:7',
             'createForm.icon' => 'nullable|string|max:50',
         ]);
@@ -84,7 +81,6 @@ class PlanCategories extends Component
             'id' => $category->id,
             'name' => $category->name,
             'description' => $category->description ?? '',
-            'is_active' => $category->is_active,
             'color' => $category->color,
             'icon' => $category->icon ?? '',
         ];
@@ -97,7 +93,6 @@ class PlanCategories extends Component
         $this->validate([
             'editForm.name' => 'required|string|max:255',
             'editForm.description' => 'nullable|string',
-            'editForm.is_active' => 'boolean',
             'editForm.color' => 'required|string|max:7',
             'editForm.icon' => 'nullable|string|max:50',
         ]);
@@ -112,7 +107,6 @@ class PlanCategories extends Component
         $category->update([
             'name' => $this->editForm['name'],
             'description' => $this->editForm['description'],
-            'is_active' => $this->editForm['is_active'],
             'color' => $this->editForm['color'],
             'icon' => $this->editForm['icon'],
         ]);
@@ -179,7 +173,6 @@ class PlanCategories extends Component
         $this->createForm = [
             'name' => '',
             'description' => '',
-            'is_active' => true,
             'color' => '#3B82F6',
             'icon' => '',
         ];
@@ -191,7 +184,6 @@ class PlanCategories extends Component
             'id' => null,
             'name' => '',
             'description' => '',
-            'is_active' => true,
             'color' => '#3B82F6',
             'icon' => '',
         ];

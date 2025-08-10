@@ -95,7 +95,6 @@ Route::prefix('app')->middleware(['auth'])->group(function () {
         Route::get('plans', \App\Livewire\Company\PlanCategories::class)->name('plans');
         Route::get('plans/categories/{category}', \App\Livewire\Company\PlansCategory::class)->name('plans.category');
         Route::get('plans/categories/{category}/features', \App\Livewire\Company\CategoryFeatures::class)->name('features.category');
-        Route::get('plans/{plan}', \App\Livewire\Company\PlanEdit::class)->name('plans.edit');
         Route::get('plans/{plan}/revisions/{revision}', \App\Livewire\Company\PlanEdit::class)->name('plans.edit.revision');
         Volt::route('billing', 'app.company.billing')->name('billing');
         // Company settings routes - require admin access for modifications
@@ -143,5 +142,6 @@ Route::get('magic-link/{token}', [\App\Http\Controllers\MagicLinkController::cla
 
 Route::get('forgot-password/{token}', [\App\Http\Controllers\MagicLinkController::class, 'verifyForgotPassword'])
     ->name('forgot-password.verify');
+
 
 require __DIR__.'/auth.php';
