@@ -87,7 +87,8 @@ Route::prefix('app')->middleware(['auth'])->group(function () {
         Route::get('contacts', \App\Livewire\Company\Contacts::class)->name('contacts');
         Route::get('contact-groups', \App\Livewire\Company\ContactGroups::class)->name('contact-groups');
         Route::get('sites', \App\Livewire\Company\Sites::class)->name('sites');
-        Route::get('site-groups', \App\Livewire\Company\SiteGroups::class)->name('site-groups');
+        Route::get('sites/groups', \App\Livewire\Company\SiteGroups::class)->name('sites.groups');
+        Route::get('sites/{site}', \App\Livewire\Company\SiteView::class)->name('sites.view');
         Volt::route('monitoring', 'app.company.monitoring')->name('monitoring');
         Route::get('teams', \App\Livewire\Company\Teams::class)->name('teams');
         Route::get('users', \App\Livewire\Company\Users::class)->name('users');

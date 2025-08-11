@@ -4,6 +4,11 @@
         <flux:sidebar.toggle class="lg:hidden self-center" icon="x-mark" style="height: 2rem; width: 2rem;" />
     </div>
 
+    <!-- Workspace Selector -->
+    <div class="px-4 pb-4">
+        <livewire:header-view-selector />
+    </div>
+
     <flux:navlist variant="outline">
         <flux:navlist.item icon="home" :href="$company ? route('company.dashboard', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
         <flux:navlist.item icon="chart-bar" :href="$company ? route('company.monitoring', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.monitoring')" wire:navigate>{{ __('Monitoring') }}</flux:navlist.item>
@@ -17,7 +22,7 @@
 
         <flux:navlist.group :heading="__('Company')" class="grid">
             <flux:navlist.item icon="users" :href="$company ? route('company.contacts', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.contacts') || request()->routeIs('company.contact-groups')" wire:navigate>{{ __('Contacts') }}</flux:navlist.item>
-            <flux:navlist.item icon="building-office" :href="$company ? route('company.sites', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.sites') || request()->routeIs('company.site-groups')" wire:navigate>{{ __('Sites') }}</flux:navlist.item>
+            <flux:navlist.item icon="building-office" :href="$company ? route('company.sites', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.sites*')" wire:navigate>{{ __('Sites') }}</flux:navlist.item>
             <flux:navlist.item icon="document-text" :href="$company ? route('company.plans', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.plans*')" wire:navigate>{{ __('Plans') }}</flux:navlist.item>
         </flux:navlist.group>
     </flux:navlist>

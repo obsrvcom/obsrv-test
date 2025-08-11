@@ -33,7 +33,14 @@
                 $routeName === 'company.contacts' => ['label' => 'Contacts', 'url' => null],
                 $routeName === 'company.contact-groups' => ['label' => 'Contact Groups', 'url' => null],
                 $routeName === 'company.sites' => ['label' => 'Sites', 'url' => null],
-                $routeName === 'company.site-groups' => ['label' => 'Site Groups', 'url' => null],
+                $routeName === 'company.sites.groups' => ['label' => 'Site Groups', 'url' => null],
+                $routeName === 'company.sites.view' => [
+                    'label' => 'Sites',
+                    'url' => route('company.sites', $company),
+                    'children' => [
+                        ['label' => $route->parameter('site')?->name ?? 'Site', 'url' => null]
+                    ]
+                ],
                 $routeName === 'company.monitoring' => ['label' => 'Monitoring', 'url' => null],
                 $routeName === 'company.teams' => ['label' => 'Teams', 'url' => null],
                 $routeName === 'company.users' => ['label' => 'Users', 'url' => null],
@@ -183,8 +190,6 @@
     }
 @endphp
 
-<livewire:header-view-selector />
-
 <flux:breadcrumbs>
     @foreach($segments as $index => $segment)
         @if($segment['icon'])
@@ -192,11 +197,13 @@
                 :href="$segment['url']"
                 icon="{{ $segment['icon'] }}"
                 separator="slash"
+                wire:navigate
             />
         @else
             <flux:breadcrumbs.item
                 :href="$segment['url']"
                 separator="slash"
+                wire:navigate
             >
                 {{ $segment['label'] }}
             </flux:breadcrumbs.item>

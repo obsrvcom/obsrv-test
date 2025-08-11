@@ -1,51 +1,38 @@
-<div class="flex h-full w-full flex-1 flex-col">
+<div class="flex h-full w-full flex-1 flex-col py-2">
     <!-- Navigation -->
-    <div class="bg-gray-50 dark:bg-gray-800 border-b border-neutral-200 dark:border-neutral-700 px-4 flex items-center gap-4">
-    <flux:badge color="zinc">Company Sites</flux:badge>
-
-    <flux:navbar>
+    <div class="px-6 py-3 flex items-center justify-between">
+        <flux:navbar>
             <flux:navbar.item
                 :href="route('company.sites', ['company' => $company->id])"
-                :current="true"
+                :current="request()->routeIs('company.sites')"
                 icon="building-office"
                 wire:navigate
             >
                 Manage Sites
             </flux:navbar.item>
             <flux:navbar.item
-                :href="route('company.site-groups', ['company' => $company->id])"
+                :href="route('company.sites.groups', ['company' => $company->id])"
+                :current="request()->routeIs('company.sites.groups')"
                 icon="folder"
                 wire:navigate
             >
                 Groups
             </flux:navbar.item>
         </flux:navbar>
+
+        <flux:button
+            variant="primary"
+            icon="plus"
+            size="sm"
+            wire:click="openCreateModal"
+        >
+            Add Site
+        </flux:button>
     </div>
     <div class="p-4 flex flex-col gap-4">
 
-    <!-- Header Section -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-                    Company Sites
-                </h1>
-                <p class="text-gray-600 dark:text-gray-400 mt-1">
-                    Manage your business locations and sites.
-                </p>
-            </div>
-            <flux:button
-                variant="primary"
-                icon="plus"
-                wire:click="openCreateModal"
-            >
-                Add Site
-            </flux:button>
-        </div>
-    </div>
-
     <!-- Sites Content -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-neutral-200 dark:border-neutral-700 flex-1">
+    <div class="bg-white dark:bg-gray-800 rounded-l border border-neutral-200 dark:border-neutral-700 flex-1">
         @if(count($sites) > 0)
             <div class="overflow-hidden">
                 <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
@@ -110,6 +97,9 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right">
                                     <div class="flex justify-end space-x-2">
+                                        <flux:button variant="primary" size="sm" icon="eye" :href="route('company.sites.view', ['company' => $company->id, 'site' => $site->id])" wire:navigate>
+                                            View
+                                        </flux:button>
                                         <flux:button variant="subtle" size="sm" icon="pencil" wire:click="openEditModal({{ $site->id }})">
                                             Edit
                                         </flux:button>
