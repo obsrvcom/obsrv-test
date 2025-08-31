@@ -29,7 +29,7 @@
     }
 @endphp
 
-<div class="pr-4">
+<div>
 <flux:dropdown>
     @if($avatarSrc)
         <flux:profile

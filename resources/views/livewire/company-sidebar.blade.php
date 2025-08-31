@@ -1,19 +1,12 @@
 <div class="contents">
-    <div class="flex items-center justify-between w-full px-4" style="min-height: 3.5rem;">
-        <span class="font-bold text-xl tracking-tight text-zinc-900 dark:text-white">Obsrv</span>
-        <flux:sidebar.toggle class="lg:hidden self-center" icon="x-mark" style="height: 2rem; width: 2rem;" />
-    </div>
+    <livewire:header-view-selector />
 
-    <!-- Workspace Selector -->
-    <div class="px-4 pb-4">
-        <livewire:header-view-selector />
-    </div>
 
-    <flux:navlist variant="outline">
+    <flux:navlist>
         <flux:navlist.item icon="home" :href="$company ? route('company.dashboard', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
         <flux:navlist.item icon="chart-bar" :href="$company ? route('company.monitoring', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.monitoring')" wire:navigate>{{ __('Monitoring') }}</flux:navlist.item>
 
-        <flux:navlist.group :heading="__('Support')" class="grid">
+        <flux:navlist.group heading="Support">
             <flux:navlist.item icon="chat-bubble-left-right" :href="$company ? route('company.tickets', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.tickets*')" wire:navigate>{{ __('Tickets') }}</flux:navlist.item>
             <flux:navlist.item icon="document-text" :href="$company ? route('company.agreements', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.agreements')" wire:navigate>{{ __('Agreements') }}</flux:navlist.item>
             <flux:navlist.item icon="wrench-screwdriver" :href="$company ? route('company.maintenance', ['company' => $company->id]) : '#'" :current="request()->routeIs('company.maintenance')" wire:navigate>{{ __('Maintenance') }}</flux:navlist.item>

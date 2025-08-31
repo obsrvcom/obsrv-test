@@ -4,17 +4,20 @@
     @include('partials.head')
 </head>
 <body class="min-h-screen bg-zinc-50 dark:bg-zinc-800">
-    <flux:sidebar sticky stashable class="border-e border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
+    <flux:sidebar sticky stashable class="bg-zinc-50 max-lg:border-e border-zinc-200 dark:border-zinc-700 ">
         <livewire:company-sidebar />
     </flux:sidebar>
-    @include('components.layouts.app.header-company')
 
-    <flux:main class="flex overflow-hidden p-0!">
+    <flux:main class="!p-0 flex flex-col space-y-2 overflow-hidden mt-2 bg-white border rounded-tl-lg">
+        <div class="py-4 px-6 border-b border-b-zinc-200">
+            <x-breadcrumbs />
+        </div>
+        <div class="p-4">
         {{ $slot ?? '' }}
         @yield('content')
+        </div>
     </flux:main>
     @fluxScripts
     <flux:toast />
-    <!-- Real-time features can be added here when needed -->
 </body>
 </html>

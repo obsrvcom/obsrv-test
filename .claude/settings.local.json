@@ -10,7 +10,8 @@
       "Bash(php -l:*)",
       "Bash(find:*)",
       "Bash(rm:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(php:*)"
     ],
     "deny": []
   }
