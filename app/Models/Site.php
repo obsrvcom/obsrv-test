@@ -63,4 +63,9 @@ class Site extends Model
     {
         return $this->chatSessions()->where('status', 'open')->exists();
     }
+
+    public function agents()
+    {
+        return $this->hasMany(Agent::class);
+    }
 }

@@ -89,7 +89,8 @@ Route::prefix('app')->middleware(['auth'])->group(function () {
         Route::get('sites', \App\Livewire\Company\Sites::class)->name('sites');
         Route::get('sites/groups', \App\Livewire\Company\SiteGroups::class)->name('sites.groups');
         Route::get('sites/{site}', \App\Livewire\Company\SiteView::class)->name('sites.view');
-        Volt::route('monitoring', 'app.company.monitoring')->name('monitoring');
+        Route::get('monitoring', \App\Livewire\Company\Monitoring::class)->name('monitoring');
+        Route::get('telegrams', \App\Livewire\Company\Telegrams::class)->name('telegrams');
         Route::get('teams', \App\Livewire\Company\Teams::class)->name('teams');
         Route::get('users', \App\Livewire\Company\Users::class)->name('users');
         // Plan management routes

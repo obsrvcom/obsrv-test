@@ -13,4 +13,16 @@ Route::prefix('v1')->group(function () {
         // API routes will go here
     });
     // API v1 routes will go here
+    
+    // Agent API routes
+    Route::prefix('agents')->group(function () {
+        Route::post('/register', [\App\Http\Controllers\Api\AgentController::class, 'register']);
+        Route::post('/pairing-code', [\App\Http\Controllers\Api\AgentController::class, 'requestPairingCode']);
+        Route::post('/heartbeat', [\App\Http\Controllers\Api\AgentController::class, 'heartbeat']);
+        Route::post('/telegrams', [\App\Http\Controllers\Api\AgentController::class, 'telegrams']);
+        Route::get('/{deviceId}/status', [\App\Http\Controllers\Api\AgentController::class, 'status']);
+        
+        // Internal route for pairing validation (requires auth)
+        Route::middleware('auth:sanctum')->post('/validate-pairing', [\App\Http\Controllers\Api\AgentController::class, 'validatePairingCode']);
+    });
 });
