@@ -24,8 +24,8 @@ return new class extends Migration
             $table->string('unit')->nullable(); // e.g., "hours", "days", "£", "%"
             $table->timestamps();
 
-            $table->index(['service_plan_feature_category_id', 'is_active']);
-            $table->index(['service_plan_feature_category_id', 'sort_order']);
+            $table->index(['service_plan_feature_category_id', 'is_active'], 'spf_category_active_idx');
+            $table->index(['service_plan_feature_category_id', 'sort_order'], 'spf_category_sort_idx');
             $table->index('affects_sla');
         });
     }
