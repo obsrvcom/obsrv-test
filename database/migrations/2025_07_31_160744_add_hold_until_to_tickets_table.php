@@ -11,12 +11,26 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('tickets', function (Blueprint $table) {
-            $table->timestamp('hold_until')->nullable()->after('last_company_message_at');
-            $table->text('hold_reason')->nullable()->after('hold_until');
+        if (!Schema::hasColumn('tickets', 'hold_until')) {
+            Schema::table('tickets', function (Blueprint $table) {
+                $table->timestamp('hold_until')->nullable()->after('last_company_message_at');
+            });
+        }
+        
+        if (!Schema::hasColumn('tickets', 'hold_reason')) {
+            Schema::table('tickets', function (Blueprint $table) {
+                $table->text('hold_reason')->nullable()->after('hold_until');
+            });
+        }
 
-            $table->index(['status', 'hold_until']);
-        });
+        // Add index - will be skipped if it already exists
+        try {
+            Schema::table('tickets', function (Blueprint $table) {
+                $table->index(['status', 'hold_until']);
+            });
+        } catch (\Exception $e) {
+            // Index already exists, continue
+        }
     }
 
     /**

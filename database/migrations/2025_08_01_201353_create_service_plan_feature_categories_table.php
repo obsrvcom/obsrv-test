@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('service_plan_feature_categories', function (Blueprint $table) {
+        if (!Schema::hasTable('service_plan_feature_categories')) {
+            Schema::create('service_plan_feature_categories', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name'); // e.g., "Telephone Support & Remote Diagnostics"
@@ -23,7 +24,8 @@ return new class extends Migration
 
             $table->index(['company_id', 'is_active']);
             $table->index(['company_id', 'sort_order']);
-        });
+            });
+        }
     }
 
     /**

@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('service_plans', function (Blueprint $table) {
+        if (!Schema::hasTable('service_plans')) {
+            Schema::create('service_plans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('service_plan_group_id')->constrained()->onDelete('cascade');
             $table->string('name'); // e.g., "Level 1", "Level 2", "No Cover"
@@ -28,7 +29,8 @@ return new class extends Migration
 
             $table->index(['service_plan_group_id', 'is_active']);
             $table->index(['service_plan_group_id', 'sort_order']);
-        });
+            });
+        }
     }
 
     /**

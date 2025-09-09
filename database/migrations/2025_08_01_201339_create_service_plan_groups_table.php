@@ -11,17 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('service_plan_groups', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('company_id')->constrained()->onDelete('cascade');
-            $table->string('name'); // e.g., "Complete Care Options"
-            $table->text('description')->nullable();
-            $table->boolean('is_active')->default(true);
-            $table->integer('sort_order')->default(0);
-            $table->timestamps();
+        if (!Schema::hasTable('service_plan_groups')) {
+            Schema::create('service_plan_groups', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('company_id')->constrained()->onDelete('cascade');
+                $table->string('name'); // e.g., "Complete Care Options"
+                $table->text('description')->nullable();
+                $table->boolean('is_active')->default(true);
+                $table->integer('sort_order')->default(0);
+                $table->timestamps();
 
-            $table->index(['company_id', 'is_active']);
-        });
+                $table->index(['company_id', 'is_active']);
+            });
+        }
     }
 
     /**

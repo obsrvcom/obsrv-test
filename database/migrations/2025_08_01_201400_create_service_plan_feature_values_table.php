@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('service_plan_feature_values', function (Blueprint $table) {
+        if (!Schema::hasTable('service_plan_feature_values')) {
+            Schema::create('service_plan_feature_values', function (Blueprint $table) {
             $table->id();
             $table->foreignId('service_plan_id')->constrained()->onDelete('cascade');
             $table->foreignId('service_plan_feature_id')->constrained()->onDelete('cascade');
@@ -24,7 +25,8 @@ return new class extends Migration
             $table->unique(['service_plan_id', 'service_plan_feature_id'], 'unique_plan_feature');
             $table->index('service_plan_id');
             $table->index('service_plan_feature_id');
-        });
+            });
+        }
     }
 
     /**
